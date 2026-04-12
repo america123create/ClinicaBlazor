@@ -1,0 +1,379 @@
+﻿@page "/login"
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using Microsoft.Extensions.Options
+@using ClinicaBlazor.Models
+@using ClinicaBlazor.Services
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+@inject ProtectedSessionStorage SessionStorage
+@inject ReCaptchaService ReCaptchaService
+@inject IOptions<ReCaptchaSettings> ReCaptchaOptions
+@inject IJSRuntime JS
+@inject JwtService JwtService
+
+<PageTitle>Login</PageTitle>
+
+<style>
+    .login-shell {
+        min-height: calc(100vh - 40px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 34px 16px;
+        background: radial-gradient(circle at top left, #ffe3f1 0%, transparent 24%), radial-gradient(circle at bottom right, #f9dbe9 0%, transparent 24%), linear-gradient(180deg, #fff9fc 0%, #fff4f8 100%);
+    }
+
+    .login-panel {
+        width: 100%;
+        max-width: 580px;
+        background: rgba(255, 255, 255, 0.96);
+        border: 1px solid #f1d7e5;
+        border-radius: 34px;
+        box-shadow: 0 22px 55px rgba(166, 77, 121, 0.12);
+        padding: 38px 46px 34px;
+    }
+
+    .login-icon-wrap {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 10px;
+    }
+
+    .login-icon {
+        width: 74px;
+        height: 74px;
+        border-radius: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.2rem;
+        color: #d16ba5;
+        background: linear-gradient(135deg, #ffe0ef, #f8d3e5);
+        box-shadow: 0 10px 24px rgba(209, 107, 165, 0.16);
+    }
+
+    .login-head {
+        text-align: center;
+        margin-bottom: 26px;
+    }
+
+        .login-head h1 {
+            margin: 0 0 10px;
+            font-size: 3rem;
+            line-height: 1.05;
+            color: #5f324d;
+            font-weight: 800;
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            background: transparent !important;
+        }
+
+        .login-head p {
+            margin: 0;
+            color: #8b6b7a;
+            font-size: 1.08rem;
+        }
+
+    .login-alert {
+        border-radius: 18px;
+        padding: 16px 18px;
+        margin-bottom: 22px;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+
+        .login-alert.success {
+            background: #edf9f0;
+            color: #159947;
+            border-left: 4px solid #21b253;
+        }
+
+        .login-alert.error {
+            background: #fff0f3;
+            color: #c43c67;
+            border-left: 4px solid #e05c89;
+        }
+
+    .login-form-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+    }
+
+    .login-field label {
+        display: block;
+        margin-bottom: 10px;
+        color: #5f324d;
+        font-size: 0.98rem;
+        font-weight: 800;
+        letter-spacing: 0.8px;
+    }
+
+    .login-input {
+        width: 100%;
+        min-height: 58px;
+        border: 1px solid #ead5e1;
+        border-radius: 18px;
+        background: #faf7fa;
+        color: #4e3141;
+        padding: 0 18px;
+        font-size: 1.05rem;
+        transition: all 0.18s ease;
+        box-sizing: border-box;
+    }
+
+        .login-input::placeholder {
+            color: #a5a0aa;
+        }
+
+        .login-input:focus {
+            outline: none;
+            border-color: #d16ba5;
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(209, 107, 165, 0.12);
+        }
+
+    .password-wrap {
+        position: relative;
+    }
+
+    .login-input.with-icon {
+        padding-right: 58px;
+    }
+
+    .toggle-password {
+        position: absolute;
+        right: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        border: none;
+        background: transparent;
+        font-size: 1.15rem;
+        cursor: pointer;
+        color: #8b6b7a;
+        padding: 4px;
+    }
+
+    .captcha-box {
+        border: 1px solid #ead5e1;
+        border-radius: 20px;
+        background: #faf7fa;
+        padding: 14px;
+    }
+
+    .captcha-inner {
+        min-height: 92px;
+        background: #fff;
+        border: 1px solid #e6e1e6;
+        border-radius: 8px;
+        display: grid;
+        grid-template-columns: 34px 1fr auto;
+        align-items: center;
+        gap: 14px;
+        padding: 0 16px;
+    }
+
+    .captcha-check {
+        width: 28px;
+        height: 28px;
+        border: 2px solid #7b6f78;
+        border-radius: 3px;
+        background: #fff;
+    }
+
+    .captcha-text {
+        font-size: 1.05rem;
+        color: #2e2e2e;
+    }
+
+    .captcha-brand {
+        color: #7f7f7f;
+        font-size: 0.9rem;
+        white-space: nowrap;
+    }
+
+    .login-main-btn {
+        width: 100%;
+        min-height: 60px;
+        border: none;
+        border-radius: 20px;
+        font-size: 1.12rem;
+        font-weight: 800;
+        color: #fff;
+        background: linear-gradient(90deg, #ef8fbe, #d96aa7);
+        box-shadow: 0 14px 28px rgba(217, 106, 167, 0.22);
+        cursor: pointer;
+        transition: transform 0.18s ease, filter 0.18s ease;
+    }
+
+        .login-main-btn:hover {
+            filter: brightness(1.03);
+            transform: translateY(-1px);
+        }
+
+        .login-main-btn:active {
+            transform: translateY(0);
+        }
+
+    @@media (max-width: 640px) {
+        .login-panel {
+            padding: 28px 18px 24px;
+            border-radius: 24px;
+        }
+
+        .login-head h1 {
+            font-size: 2.3rem;
+        }
+
+        .captcha-inner {
+            grid-template-columns: 30px 1fr;
+            grid-template-areas:
+                "check text"
+                "brand brand";
+            row-gap: 8px;
+            padding-top: 14px;
+            padding-bottom: 14px;
+        }
+
+        .captcha-check {
+            grid-area: check;
+        }
+
+        .captcha-text {
+            grid-area: text;
+        }
+
+        .captcha-brand {
+            grid-area: brand;
+            text-align: right;
+        }
+    }
+</style>
+
+<div class="login-shell">
+    <div class="login-panel">
+        <div class="login-icon-wrap">
+            <div class="login-icon"></div>
+        </div>
+
+        <div class="login-head">
+            <h1>Bienvenido</h1>
+            <p>Ingresa tus credenciales para acceder al panel</p>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(exito))
+        {
+            <div class="login-alert success">
+                @exito
+            </div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(error))
+        {
+            <div class="login-alert error">
+                @error
+            </div>
+        }
+
+        <EditForm Model="modelo" OnValidSubmit="IniciarSesion" FormName="loginForm">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="login-form-grid">
+                <div class="login-field">
+                    <label>NOMBRE DE USUARIO</label>
+                    <InputText @bind-Value="modelo.Username"
+                               class="login-input"
+                               placeholder="Ej: admin, jperez..." />
+                </div>
+
+                <div class="login-field">
+                    <label>CONTRASEÑA</label>
+                    <div class="password-wrap">
+                        <InputText @bind-Value="modelo.Password"
+                                   type="@(mostrarPassword ? "text" : "password")"
+                                   class="login-input with-icon"
+                                   placeholder="••••••••" />
+                        <button type="button" class="toggle-password" @onclick="TogglePassword">
+                            @(mostrarPassword ? "🙈" : "👁")
+                        </button>
+                    </div>
+                </div>
+
+                <div class="captcha-real-box">
+                    <div id="login-recaptcha"></div>
+                </div>
+
+                <button type="submit" class="login-main-btn">
+                    Acceder al sistema
+                </button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private LoginInputModel modelo = new();
+    private string? error;
+    private string? exito;
+    private bool mostrarPassword;
+    private string SiteKey => ReCaptchaOptions.Value.SiteKey;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await JS.InvokeVoidAsync("renderLoginRecaptcha", SiteKey);
+    }
+
+    private void TogglePassword()
+    {
+        mostrarPassword = !mostrarPassword;
+    }
+
+    private async Task IniciarSesion()
+    {
+        error = null;
+        exito = null;
+
+        modelo.Username = modelo.Username?.Trim() ?? string.Empty;
+        modelo.Password = modelo.Password?.Trim() ?? string.Empty;
+
+
+        var captchaToken = await JS.InvokeAsync<string>("getLoginRecaptchaToken");
+
+        if (string.IsNullOrWhiteSpace(captchaToken))
+        {
+            error = "Completa el captcha antes de continuar.";
+            return;
+        }
+
+        var captchaValido = await ReCaptchaService.VerificarTokenAsync(captchaToken);
+
+        if (!captchaValido)
+        {
+            error = "No se pudo validar el captcha. Intenta de nuevo.";
+            return;
+        }
+
+        var resultado = await AuthService.LoginAsync(modelo.Username, modelo.Password);
+
+        if (resultado.usuario == null)
+        {
+            error = resultado.mensaje;
+            return;
+        }
+
+        var jwtToken = JwtService.GenerarToken(resultado.usuario);
+
+        await SessionStorage.SetAsync("jwt_token", jwtToken);
+        await SessionStorage.SetAsync("usuario_id", resultado.usuario.Id);
+        await SessionStorage.SetAsync("usuario_nombre", resultado.usuario.Nombre);
+        await SessionStorage.SetAsync("usuario_username", resultado.usuario.Username);
+        await SessionStorage.SetAsync("usuario_perfil", resultado.usuario.Perfil);
+
+        Navigation.NavigateTo("/dashboard", true);
+  
+    }
+ }

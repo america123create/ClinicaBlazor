@@ -1,0 +1,124 @@
+﻿@page "/principal2/uno"
+@rendermode InteractiveServer
+@using ClinicaBlazor.Services
+@inject SesionService SesionService
+@inject NavigationManager Navigation
+@inject PermisoPerfilService PermisoPerfilService
+
+<PageTitle>Principal 2.1</PageTitle>
+
+@if (!cargado)
+{
+    <p>Cargando...</p>
+}
+else if (!haySesion)
+{
+    <p>Redirigiendo...</p>
+}
+else
+{
+    <Breadcrumbs Items="breadcrumbItems" />
+
+    <section class="module-header">
+        <h1>Módulo Principal 2.1</h1>
+        <p>Gestión operativa del segundo bloque principal</p>
+    </section>
+
+    <section class="module-actions">
+        <button type="button" class="btn btn-primary module-add-btn">
+            ＋ Nuevo Registro
+        </button>
+    </section>
+
+    <section class="module-table-card">
+        <table class="module-table">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Estatus</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Elemento operativo A</td>
+                    <td>
+                        <span class="status-pill active">• Activo</span>
+                    </td>
+                    <td>
+                        <div class="action-group">
+                            <button type="button" class="btn-action edit">Editar</button>
+                            <button type="button" class="btn-action delete">Eliminar</button>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Elemento operativo B</td>
+                    <td>
+                        <span class="status-pill active">• Activo</span>
+                    </td>
+                    <td>
+                        <div class="action-group">
+                            <button type="button" class="btn-action edit">Editar</button>
+                            <button type="button" class="btn-action delete">Eliminar</button>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section class="module-footer-card">
+        <span>Total de registros:</span>
+        <strong>2</strong>
+    </section>
+}
+
+@code {
+    private bool cargado;
+    private bool haySesion;
+
+    private List<BreadcrumbItem> breadcrumbItems = new()
+    {
+        new BreadcrumbItem { Texto = "Inicio", Url = "/dashboard" },
+        new BreadcrumbItem { Texto = "Principal 2", Url = "/principal2" },
+        new BreadcrumbItem { Texto = "Principal 2.1" }
+    };
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        haySesion = await SesionService.HaySesionAsync();
+
+        if (!haySesion)
+        {
+            cargado = true;
+            StateHasChanged();
+            Navigation.NavigateTo("/login", true);
+            return;
+        }
+        var perfil = await SesionService.ObtenerPerfilAsync();
+
+        if (string.IsNullOrWhiteSpace(perfil))
+        {
+            cargado = true;
+            StateHasChanged();
+            Navigation.NavigateTo("/login", true);
+            return;
+        }
+
+        var tieneAcceso = await PermisoPerfilService.TieneAccesoConsultaAsync(perfil, "/principal2/uno");
+
+        if (!tieneAcceso)
+        {
+            cargado = true;
+            StateHasChanged();
+            Navigation.NavigateTo("/error", true);
+            return;
+        }
+
+        cargado = true;
+        StateHasChanged();
+    }
+}

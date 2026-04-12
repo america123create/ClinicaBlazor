@@ -1,0 +1,26 @@
+﻿@page "/error"
+@rendermode InteractiveServer
+@inject NavigationManager Navigation
+
+<PageTitle>Error</PageTitle>
+
+<section class="error-shell">
+    <div class="error-card">
+        <div class="error-code">Oops</div>
+
+        <h1>Ha ocurrido un problema</h1>
+        <p>
+            La página solicitada no pudo cargarse correctamente o no tienes acceso a este recurso.
+        </p>
+
+        <div class="error-actions">
+            <button class="btn btn-primary module-add-btn" @onclick='() => Navigation.NavigateTo("/dashboard")'>
+                Ir al dashboard
+            </button>
+
+            <button class="btn btn-secondary" @onclick='() => Navigation.NavigateTo("/login")'>
+                Ir al login
+            </button>
+        </div>
+    </div>
+</section>

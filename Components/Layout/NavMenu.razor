@@ -1,0 +1,264 @@
+﻿@rendermode InteractiveServer
+@using ClinicaBlazor.Services
+@inject SesionService SesionService
+@inject PerfilService PerfilService
+@inject PermisoPerfilService PermisoPerfilService
+@inject NavigationManager Navigation
+
+<header class="topbar">
+    <div class="topbar-inner">
+        <div class="topbar-left">
+            <a class="brand" href="/dashboard">ClinicaBlazor</a>
+
+            @if (cargado && haySesion)
+            {
+                <nav class="topnav">
+                    <a class="topnav-link @(EsRutaActiva("/dashboard") ? "active" : "")"
+                       href="/dashboard">
+                        Inicio
+                    </a>
+
+                    @if (TieneAlgunaRutaSeguridad())
+                    {
+                        <div class="topnav-dropdown">
+                            <button type="button"
+                                    class="topnav-link dropdown-toggle @(EsSeccionActiva("/seguridad") ? "active" : "")"
+                                    @onclick='() => ToggleMenu("seguridad")'>
+                                Seguridad
+                            </button>
+
+                            <div class="dropdown-menu @(menuAbierto == "seguridad" ? "show" : "")">
+                                @if (rutasPermitidas.Contains("/seguridad/perfil"))
+                                {
+                                    <a href="/seguridad/perfil" @onclick="CerrarMenus">Perfil</a>
+                                }
+
+                                @if (rutasPermitidas.Contains("/seguridad/modulos"))
+                                {
+                                    <a href="/seguridad/modulos" @onclick="CerrarMenus">Módulo</a>
+                                }
+
+                                @if (rutasPermitidas.Contains("/seguridad/permisos-perfil"))
+                                {
+                                    <a href="/seguridad/permisos-perfil" @onclick="CerrarMenus">Permisos - Perfil</a>
+                                }
+
+                                @if (rutasPermitidas.Contains("/seguridad/usuarios"))
+                                {
+                                    <a href="/seguridad/usuarios" @onclick="CerrarMenus">Usuario</a>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    @if (rutasPermitidas.Contains("/principal1") || rutasPermitidas.Contains("/principal1/uno") || rutasPermitidas.Contains("/principal1/dos"))
+                    {
+                        <div class="topnav-dropdown">
+                            <button type="button"
+                                    class="topnav-link dropdown-toggle @(EsSeccionActiva("/principal1") ? "active" : "")"
+                                    @onclick='() => ToggleMenu("principal1")'>
+                                Principal 1
+                            </button>
+
+                            <div class="dropdown-menu @(menuAbierto == "principal1" ? "show" : "")">
+                                @if (rutasPermitidas.Contains("/principal1"))
+                                {
+                                    <a href="/principal1" @onclick="CerrarMenus">Principal 1</a>
+                                }
+
+                                @if (rutasPermitidas.Contains("/principal1/uno"))
+                                {
+                                    <a href="/principal1/uno" @onclick="CerrarMenus">Principal 1.1</a>
+                                }
+
+                                @if (rutasPermitidas.Contains("/principal1/dos"))
+                                {
+                                    <a href="/principal1/dos" @onclick="CerrarMenus">Principal 1.2</a>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    @if (rutasPermitidas.Contains("/principal2") || rutasPermitidas.Contains("/principal2/uno") || rutasPermitidas.Contains("/principal2/dos"))
+                    {
+                        <div class="topnav-dropdown">
+                            <button type="button"
+                                    class="topnav-link dropdown-toggle @(EsSeccionActiva("/principal2") ? "active" : "")"
+                                    @onclick='() => ToggleMenu("principal2")'>
+                                Principal 2
+                            </button>
+
+                            <div class="dropdown-menu @(menuAbierto == "principal2" ? "show" : "")">
+                                @if (rutasPermitidas.Contains("/principal2"))
+                                {
+                                    <a href="/principal2" @onclick="CerrarMenus">Principal 2</a>
+                                }
+
+                                @if (rutasPermitidas.Contains("/principal2/uno"))
+                                {
+                                    <a href="/principal2/uno" @onclick="CerrarMenus">Principal 2.1</a>
+                                }
+
+                                @if (rutasPermitidas.Contains("/principal2/dos"))
+                                {
+                                    <a href="/principal2/dos" @onclick="CerrarMenus">Principal 2.2</a>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    @if (TieneAlgunaRutaModulos())
+                    {
+                        <div class="topnav-dropdown">
+                            <button type="button"
+                                    class="topnav-link dropdown-toggle"
+                                    @onclick='() => ToggleMenu("modulos")'>
+                                Módulos
+                            </button>
+
+                            <div class="dropdown-menu @(menuAbierto == "modulos" ? "show" : "")">
+                                <a href="/dashboard" @onclick="CerrarMenus">Salpicadero</a>
+
+                                @if (rutasPermitidas.Contains("/seguridad/perfil"))
+                                {
+                                    <a href="/seguridad/perfil" @onclick="CerrarMenus">Perfiles</a>
+                                }
+
+                                @if (rutasPermitidas.Contains("/seguridad/usuarios"))
+                                {
+                                    <a href="/seguridad/usuarios" @onclick="CerrarMenus">Usuarios</a>
+                                }
+
+                                @if (rutasPermitidas.Contains("/seguridad/modulos"))
+                                {
+                                    <a href="/seguridad/modulos" @onclick="CerrarMenus">Módulos</a>
+                                }
+
+                                @if (rutasPermitidas.Contains("/seguridad/permisos-perfil"))
+                                {
+                                    <a href="/seguridad/permisos-perfil" @onclick="CerrarMenus">Permisos Perfil</a>
+                                }
+
+                                @if (rutasPermitidas.Contains("/principal1/uno"))
+                                {
+                                    <a href="/principal1/uno" @onclick="CerrarMenus">Principal 1.1</a>
+                                }
+
+                                @if (rutasPermitidas.Contains("/principal1/dos"))
+                                {
+                                    <a href="/principal1/dos" @onclick="CerrarMenus">Principal 1.2</a>
+                                }
+
+                                @if (rutasPermitidas.Contains("/principal2/uno"))
+                                {
+                                    <a href="/principal2/uno" @onclick="CerrarMenus">Principal 2.1</a>
+                                }
+
+                                @if (rutasPermitidas.Contains("/principal2/dos"))
+                                {
+                                    <a href="/principal2/dos" @onclick="CerrarMenus">Principal 2.2</a>
+                                }
+                            </div>
+                        </div>
+                    }
+                </nav>
+            }
+        </div>
+
+        <div class="topbar-right">
+            @if (cargado && haySesion)
+            {
+                <div class="user-pill">
+                    <span class="user-label">Hola,</span>
+                    <span class="user-name">@nombreUsuario</span>
+                </div>
+
+                <button class="logout-btn" @onclick="Salir">
+                    Cerrar Sesión
+                </button>
+            }
+            else
+            {
+                <a class="login-link" href="/login">Iniciar sesión</a>
+            }
+        </div>
+    </div>
+</header>
+
+@code {
+    private bool haySesion;
+    private bool cargado;
+    private string? nombreUsuario;
+    private string? perfilUsuario;
+    private List<string> rutasPermitidas = new();
+    private string? menuAbierto;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        haySesion = await SesionService.HaySesionAsync();
+        nombreUsuario = await SesionService.ObtenerNombreAsync();
+        perfilUsuario = await SesionService.ObtenerPerfilAsync();
+
+        if (haySesion && !string.IsNullOrWhiteSpace(perfilUsuario))
+        {
+            var perfil = await PerfilService.ObtenerPorNombreAsync(perfilUsuario);
+
+            if (perfil != null)
+            {
+                var permisos = await PermisoPerfilService.ObtenerPorPerfilIdAsync(perfil.Id);
+
+                rutasPermitidas = permisos
+                    .Where(p => p.Consultar && p.Modulo != null && !string.IsNullOrWhiteSpace(p.Modulo.Ruta))
+                    .Select(p => p.Modulo!.Ruta!.Trim())
+                    .Distinct()
+                    .ToList();
+            }
+        }
+
+        cargado = true;
+        StateHasChanged();
+    }
+
+    private bool TieneAlgunaRutaSeguridad()
+    {
+        return rutasPermitidas.Contains("/seguridad/perfil")
+            || rutasPermitidas.Contains("/seguridad/usuarios")
+            || rutasPermitidas.Contains("/seguridad/modulos")
+            || rutasPermitidas.Contains("/seguridad/permisos-perfil");
+    }
+
+    private bool TieneAlgunaRutaModulos()
+    {
+        return rutasPermitidas.Count > 0;
+    }
+
+    private void ToggleMenu(string nombreMenu)
+    {
+        menuAbierto = menuAbierto == nombreMenu ? null : nombreMenu;
+    }
+
+    private void CerrarMenus()
+    {
+        menuAbierto = null;
+    }
+
+    private bool EsRutaActiva(string ruta)
+    {
+        var actual = "/" + Navigation.ToBaseRelativePath(Navigation.Uri);
+        return actual.Equals(ruta, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private bool EsSeccionActiva(string prefijo)
+    {
+        var actual = "/" + Navigation.ToBaseRelativePath(Navigation.Uri);
+        return actual.StartsWith(prefijo, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private async Task Salir()
+    {
+        await SesionService.CerrarSesionAsync();
+        Navigation.NavigateTo("/login", true);
+    }
+}

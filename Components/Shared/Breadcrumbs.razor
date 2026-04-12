@@ -1,0 +1,24 @@
+﻿@if (Items != null && Items.Any())
+{
+    <nav class="breadcrumb-wrap" aria-label="breadcrumb">
+        @for (int i = 0; i < Items.Count; i++)
+        {
+            var item = Items[i];
+            var esUltimo = i == Items.Count - 1;
+
+            if (!esUltimo && !string.IsNullOrWhiteSpace(item.Url))
+            {
+                <a class="breadcrumb-link" href="@item.Url">@item.Texto</a>
+                <span class="breadcrumb-separator">/</span>
+            }
+            else
+            {
+                <span class="breadcrumb-current">@item.Texto</span>
+            }
+        }
+    </nav>
+}
+@code {
+    [Parameter]
+    public List<BreadcrumbItem> Items { get; set; } = new();
+}

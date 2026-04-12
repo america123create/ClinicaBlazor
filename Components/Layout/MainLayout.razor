@@ -1,0 +1,28 @@
+﻿@inherits LayoutComponentBase
+@inject NavigationManager Navigation
+
+@code {
+    private bool EsLogin =>
+        Navigation.Uri.Contains("/login");
+}
+
+@if (EsLogin)
+{
+    <main class="main-content">
+        <section class="page-container">
+            @Body
+        </section>
+    </main>
+}
+else
+{
+    <div class="app-shell">
+        <NavMenu />
+
+        <main class="main-content">
+            <section class="page-container">
+                @Body
+            </section>
+        </main>
+    </div>
+}

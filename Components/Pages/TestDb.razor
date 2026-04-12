@@ -1,0 +1,48 @@
+﻿@page "/testdb"
+@using ClinicaBlazor.Data
+@using ClinicaBlazor.Models
+@using Microsoft.EntityFrameworkCore
+@inject IDbContextFactory<AppDbContext> DbFactory
+
+<h1>Prueba de conexión a MySQL</h1>
+
+@if (!string.IsNullOrEmpty(error))
+{
+    <p><strong>Error:</strong> @error</p>
+}
+else if (usuarios == null)
+{
+    <p>Cargando datos...</p>
+}
+else if (usuarios.Count == 0)
+{
+    <p>La conexión funcionó, pero no hay registros en la tabla usuarios.</p>
+}
+else
+{
+    <p>Conexión exitosa. Usuarios encontrados:</p>
+    <ul>
+        @foreach (var u in usuarios)
+        {
+          <li>@u.Nombre</li>
+        }
+    </ul>
+}
+
+@code {
+    private List<Usuario>? usuarios;
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+            usuarios = await context.Usuarios.ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+    }
+}

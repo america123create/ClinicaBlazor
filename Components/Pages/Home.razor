@@ -1,0 +1,21 @@
+﻿@page "/"
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@inject ProtectedSessionStorage SessionStorage
+@inject NavigationManager Navigation
+
+<h1>Cargando...</h1>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        var resultado = await SessionStorage.GetAsync<string>("usuario_nombre");
+
+        if (resultado.Success && !string.IsNullOrEmpty(resultado.Value))
+            Navigation.NavigateTo("/dashboard", true);
+        else
+            Navigation.NavigateTo("/login", true);
+    }
+}

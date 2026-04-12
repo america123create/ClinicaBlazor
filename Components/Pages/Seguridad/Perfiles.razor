@@ -1,0 +1,355 @@
+﻿@page "/seguridad/perfil"
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Components.Forms
+@using ClinicaBlazor.Services
+@inject PerfilService PerfilService
+@inject PermisoPerfilService PermisoPerfilService
+@inject SesionService SesionService
+@inject NavigationManager Navigation
+
+<PageTitle>Perfiles</PageTitle>
+
+@if (!cargado)
+{
+    <p>Cargando...</p>
+}
+else if (!haySesion)
+{
+    <p>Redirigiendo...</p>
+}
+else
+{
+    <Breadcrumbs Items="breadcrumbItems" />
+
+    <section class="module-header">
+        <h1>Perfiles</h1>
+        <p>Gestión de perfiles del sistema</p>
+    </section>
+
+    <section class="form-card">
+        <EditForm Model="nuevoPerfil" OnValidSubmit="GuardarPerfil">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-grid perfiles-grid">
+                <div class="form-group">
+                    <label>Nombre del perfil</label>
+                    <InputText @bind-Value="nuevoPerfil.Nombre" class="form-control" />
+                </div>
+
+                <div class="form-group checkbox-group">
+                    <label>Configuración</label>
+                    <label class="checkbox-inline">
+                        <InputCheckbox @bind-Value="nuevoPerfil.Administrador" />
+                        Es administrador
+                    </label>
+                </div>
+
+                <div class="form-actions full-width">
+                    @if ((nuevoPerfil.Id == 0 && puedeAgregar) || (nuevoPerfil.Id != 0 && puedeEditar))
+                    {
+                        <button type="submit" class="btn btn-primary module-add-btn">
+                            @(nuevoPerfil.Id == 0 ? "Guardar perfil" : "Actualizar perfil")
+                        </button>
+                    }
+
+                    @if (nuevoPerfil.Id != 0)
+                    {
+                        <button type="button" class="btn btn-secondary" @onclick="CancelarEdicion">
+                            Cancelar
+                        </button>
+                    }
+                </div>
+            </div>
+        </EditForm>
+    </section>
+
+    @if (!string.IsNullOrEmpty(mensaje))
+    {
+        <div class="alert alert-success">@mensaje</div>
+    }
+
+    @if (mostrarDetalle && perfilDetalle != null)
+    {
+        <section class="detail-card">
+            <h3>Detalle del perfil</h3>
+
+            <div class="detail-info">
+                <p><strong>ID:</strong> @perfilDetalle.Id</p>
+                <p><strong>Nombre:</strong> @perfilDetalle.Nombre</p>
+                <p><strong>Administrador:</strong> @(perfilDetalle.Administrador ? "Sí" : "No")</p>
+            </div>
+
+            <button class="btn btn-secondary" @onclick="CerrarDetalle">
+                Cerrar detalle
+            </button>
+        </section>
+    }
+
+    <section class="module-table-card">
+        <table class="module-table">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Administrador</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var perfil in perfilesPaginados)
+                {
+                    <tr>
+                        <td>@perfil.Nombre</td>
+                        <td>
+                            <span class="status-pill @(perfil.Administrador ? "active" : "inactive")">
+                                • @(perfil.Administrador ? "Sí" : "No")
+                            </span>
+                        </td>
+                        <td>
+                            <div class="action-group">
+                                @if (puedeDetalle)
+                                {
+                                    <button class="btn-action detail" @onclick="() => VerDetalle(perfil)">
+                                        Detalle
+                                    </button>
+                                }
+
+                                @if (puedeEditar)
+                                {
+                                    <button class="btn-action edit" @onclick="() => EditarPerfil(perfil)">
+                                        Editar
+                                    </button>
+                                }
+
+                                @if (puedeEliminar)
+                                {
+                                    <button class="btn-action delete" @onclick="() => EliminarPerfil(perfil.Id)">
+                                        Eliminar
+                                    </button>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+
+    <section class="module-footer-card">
+        <span>Página @paginaActual de @TotalPaginas</span>
+
+        <div class="action-group">
+            <button class="btn btn-secondary" @onclick="PaginaAnterior" disabled="@(paginaActual == 1)">
+                &lt;
+            </button>
+
+            <button class="btn btn-secondary" @onclick="PaginaSiguiente" disabled="@(paginaActual == TotalPaginas)">
+                &gt;
+            </button>
+        </div>
+    </section>
+}
+
+@code {
+    private bool cargado;
+    private bool haySesion;
+    private string? mensaje;
+
+    private bool puedeAgregar;
+    private bool puedeEditar;
+    private bool puedeEliminar;
+    private bool puedeConsultar;
+    private bool puedeDetalle;
+
+    private bool mostrarDetalle;
+    private ClinicaBlazor.Models.Perfil? perfilDetalle;
+
+    private int paginaActual = 1;
+    private int filasPorPagina = 5;
+
+    private ClinicaBlazor.Models.Perfil nuevoPerfil = new();
+    private List<ClinicaBlazor.Models.Perfil> perfiles = new();
+
+    private List<BreadcrumbItem> breadcrumbItems = new()
+    {
+        new BreadcrumbItem { Texto = "Inicio", Url = "/dashboard" },
+        new BreadcrumbItem { Texto = "Seguridad" },
+        new BreadcrumbItem { Texto = "Perfil" }
+    };
+
+    private int TotalPaginas =>
+        perfiles.Count == 0 ? 1 : (int)Math.Ceiling((double)perfiles.Count / filasPorPagina);
+
+    private List<ClinicaBlazor.Models.Perfil> perfilesPaginados =>
+        perfiles.Skip((paginaActual - 1) * filasPorPagina).Take(filasPorPagina).ToList();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        haySesion = await SesionService.HaySesionAsync();
+
+        if (!haySesion)
+        {
+            cargado = true;
+            StateHasChanged();
+            Navigation.NavigateTo("/login", true);
+            return;
+        }
+
+        var perfilNombre = await SesionService.ObtenerPerfilAsync();
+
+        if (!string.IsNullOrWhiteSpace(perfilNombre))
+        {
+            var perfilSesion = await PerfilService.ObtenerPorNombreAsync(perfilNombre);
+
+            if (perfilSesion != null)
+            {
+                var permiso = await PermisoPerfilService.ObtenerPermisoPorPerfilYRutaAsync(perfilSesion.Id, "/seguridad/perfil");
+
+                if (permiso != null)
+                {
+                    puedeAgregar = permiso.Agregar;
+                    puedeEditar = permiso.Editar;
+                    puedeEliminar = permiso.Eliminar;
+                    puedeConsultar = permiso.Consultar;
+                    puedeDetalle = permiso.Detalle;
+                }
+            }
+        }
+
+        if (!puedeConsultar)
+        {
+            cargado = true;
+            StateHasChanged();
+            Navigation.NavigateTo("/dashboard", true);
+            return;
+        }
+
+        await CargarPerfiles();
+        cargado = true;
+        StateHasChanged();
+    }
+
+    private async Task CargarPerfiles()
+    {
+        perfiles = await PerfilService.ObtenerTodosAsync();
+    }
+
+    private async Task GuardarPerfil()
+    {
+        mensaje = null;
+
+        if (nuevoPerfil.Id == 0 && !puedeAgregar)
+        {
+            mensaje = "No tienes permiso para agregar.";
+            return;
+        }
+
+        if (nuevoPerfil.Id != 0 && !puedeEditar)
+        {
+            mensaje = "No tienes permiso para editar.";
+            return;
+        }
+
+        await PerfilService.GuardarAsync(nuevoPerfil);
+
+        mensaje = nuevoPerfil.Id == 0
+            ? "Perfil guardado correctamente."
+            : "Perfil actualizado correctamente.";
+
+        nuevoPerfil = new ClinicaBlazor.Models.Perfil();
+        await CargarPerfiles();
+        ReiniciarPaginacionSiHaceFalta();
+    }
+
+    private void EditarPerfil(ClinicaBlazor.Models.Perfil perfil)
+    {
+        mensaje = null;
+        mostrarDetalle = false;
+        perfilDetalle = null;
+
+        nuevoPerfil = new ClinicaBlazor.Models.Perfil
+        {
+            Id = perfil.Id,
+            Nombre = perfil.Nombre,
+            Administrador = perfil.Administrador
+        };
+    }
+
+    private void CancelarEdicion()
+    {
+        mensaje = null;
+        nuevoPerfil = new ClinicaBlazor.Models.Perfil();
+    }
+
+    private async Task EliminarPerfil(int id)
+    {
+        mensaje = null;
+
+        if (!puedeEliminar)
+        {
+            mensaje = "No tienes permiso para eliminar.";
+            return;
+        }
+
+        await PerfilService.EliminarAsync(id);
+        mensaje = "Perfil eliminado correctamente.";
+
+        if (nuevoPerfil.Id == id)
+            nuevoPerfil = new ClinicaBlazor.Models.Perfil();
+
+        if (perfilDetalle?.Id == id)
+        {
+            perfilDetalle = null;
+            mostrarDetalle = false;
+        }
+
+        await CargarPerfiles();
+        ReiniciarPaginacionSiHaceFalta();
+    }
+
+    private void VerDetalle(ClinicaBlazor.Models.Perfil perfil)
+    {
+        mensaje = null;
+
+        if (!puedeDetalle)
+        {
+            mensaje = "No tienes permiso para ver detalle.";
+            return;
+        }
+
+        perfilDetalle = new ClinicaBlazor.Models.Perfil
+        {
+            Id = perfil.Id,
+            Nombre = perfil.Nombre,
+            Administrador = perfil.Administrador
+        };
+
+        mostrarDetalle = true;
+    }
+
+    private void CerrarDetalle()
+    {
+        mostrarDetalle = false;
+        perfilDetalle = null;
+    }
+
+    private void PaginaAnterior()
+    {
+        if (paginaActual > 1)
+            paginaActual--;
+    }
+
+    private void PaginaSiguiente()
+    {
+        if (paginaActual < TotalPaginas)
+            paginaActual++;
+    }
+
+    private void ReiniciarPaginacionSiHaceFalta()
+    {
+        if (paginaActual > TotalPaginas)
+            paginaActual = TotalPaginas;
+    }
+}
