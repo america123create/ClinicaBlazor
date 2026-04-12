@@ -51,7 +51,7 @@ else
     app.UseExceptionHandler("/error");
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 app.UseAntiforgery();
