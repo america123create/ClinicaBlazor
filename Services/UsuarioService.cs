@@ -13,14 +13,10 @@ namespace ClinicaBlazor.Services
             _dbFactory = dbFactory;
         }
 
-        public async Task<List<Usuario>> ObtenerTodosAsync()
+        public async Task<List<Usuario>> ObtenerUsuarios()
         {
             using var context = _dbFactory.CreateDbContext();
-
-            return await context.Usuarios
-                .AsNoTracking()
-                .OrderBy(u => u.Id)
-                .ToListAsync();
+            return await context.Usuarios.ToListAsync();
         }
 
         public async Task GuardarAsync(Usuario usuario)
@@ -28,13 +24,9 @@ namespace ClinicaBlazor.Services
             using var context = _dbFactory.CreateDbContext();
 
             if (usuario.Id == 0)
-            {
                 context.Usuarios.Add(usuario);
-            }
             else
-            {
                 context.Usuarios.Update(usuario);
-            }
 
             await context.SaveChangesAsync();
         }
@@ -43,14 +35,19 @@ namespace ClinicaBlazor.Services
         {
             using var context = _dbFactory.CreateDbContext();
 
-            var usuario = await context.Usuarios.FindAsync(id);
-            if (usuario == null)
+            var u = await context.Usuarios.FindAsync(id);
+            if (u != null)
             {
-                return;
+                context.Usuarios.Remove(u);
+                await context.SaveChangesAsync();
             }
+        }
 
-            context.Usuarios.Remove(usuario);
-            await context.SaveChangesAsync();
+        public async Task<Usuario?> ObtenerPorIdAsync(int id)
+        {
+            using var context = _dbFactory.CreateDbContext();
+            return await context.Usuarios.FindAsync(id);
         }
     }
+    
 }

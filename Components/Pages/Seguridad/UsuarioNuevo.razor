@@ -1,0 +1,155 @@
+﻿@page "/seguridad/usuarios/nuevo"
+@rendermode InteractiveServer
+
+@using Microsoft.AspNetCore.Components.Forms
+@using ClinicaBlazor.Services
+@using Microsoft.AspNetCore.Hosting
+@using System.IO
+
+@inject UsuarioService UsuarioService
+@inject PerfilService PerfilService
+@inject NavigationManager Navigation
+@inject IWebHostEnvironment Env
+
+<PageTitle>Nuevo Usuario</PageTitle>
+
+<h3>Nuevo Usuario</h3>
+
+<section class="form-card">
+    <EditForm Model="nuevoUsuario" OnValidSubmit="GuardarUsuario">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="form-grid">
+
+            <div class="form-group">
+                <label>Nombre</label>
+                <InputText @bind-Value="nuevoUsuario.Nombre" class="form-control" />
+            </div>
+
+            <div class="form-group">
+                <label>Correo</label>
+                <InputText @bind-Value="nuevoUsuario.Correo" class="form-control" />
+            </div>
+
+            <div class="form-group">
+                <label>Nombre de usuario</label>
+                <InputText @bind-Value="nuevoUsuario.Username" class="form-control" />
+            </div>
+
+            <div class="form-group">
+                <label>Contraseña</label>
+                <InputText @bind-Value="nuevoUsuario.Password" type="password" class="form-control" />
+            </div>
+
+            <div class="form-group">
+                <label>Número celular</label>
+                <InputText @bind-Value="nuevoUsuario.NumeroCelular" class="form-control" maxlength="10" />
+            </div>
+
+            <div class="form-group">
+                <label>Perfil</label>
+                <InputSelect @bind-Value="nuevoUsuario.Perfil" class="form-control">
+                    <option value="">Seleccione un perfil</option>
+                    @foreach (var perfil in perfilesDisponibles)
+                    {
+                        <option value="@perfil.Nombre">@perfil.Nombre</option>
+                    }
+                </InputSelect>
+            </div>
+
+            <div class="form-group">
+                <label>
+                    <InputCheckbox @bind-Value="nuevoUsuario.Activo" />
+                    Activo
+                </label>
+            </div>
+
+            <div class="form-group full-width">
+                <label>Imagen del usuario</label>
+                <InputFile OnChange="SeleccionarImagen" accept="image/*" class="form-control" />
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(previewImagen))
+            {
+                <div class="form-group full-width">
+                    <label>Vista previa</label>
+                    <img src="@previewImagen" width="100" />
+                </div>
+            }
+
+            <div class="form-actions full-width">
+                <button type="submit" class="btn btn-primary">
+                    Guardar usuario
+                </button>
+
+                <button type="button" class="btn btn-secondary"
+                        @onclick="Volver">
+                    Cancelar
+                </button>
+            </div>
+
+        </div>
+    </EditForm>
+</section>
+
+@code {
+    private ClinicaBlazor.Models.Usuario nuevoUsuario = new();
+    private List<ClinicaBlazor.Models.Perfil> perfilesDisponibles = new();
+
+    private IBrowserFile? archivoImagen;
+    private string? previewImagen;
+
+    protected override async Task OnInitializedAsync()
+    {
+        perfilesDisponibles = await PerfilService.ObtenerTodosAsync();
+    }
+
+    private async Task SeleccionarImagen(InputFileChangeEventArgs e)
+    {
+        archivoImagen = e.File;
+
+        if (archivoImagen != null)
+        {
+            using var stream = archivoImagen.OpenReadStream(5 * 1024 * 1024);
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            var base64 = Convert.ToBase64String(ms.ToArray());
+            previewImagen = $"data:{archivoImagen.ContentType};base64,{base64}";
+        }
+    }
+
+    private async Task<string?> GuardarImagenAsync()
+    {
+        if (archivoImagen == null)
+            return null;
+
+        var extension = Path.GetExtension(archivoImagen.Name);
+        var nombreArchivo = $"{Guid.NewGuid()}{extension}";
+        var ruta = Path.Combine(Env.WebRootPath, "uploads/usuarios");
+
+        if (!Directory.Exists(ruta))
+            Directory.CreateDirectory(ruta);
+
+        var rutaCompleta = Path.Combine(ruta, nombreArchivo);
+
+        using var fs = new FileStream(rutaCompleta, FileMode.Create);
+        await archivoImagen.OpenReadStream().CopyToAsync(fs);
+
+        return $"/uploads/usuarios/{nombreArchivo}";
+    }
+
+    private async Task GuardarUsuario()
+    {
+        nuevoUsuario.Imagen = await GuardarImagenAsync();
+
+        await UsuarioService.GuardarAsync(nuevoUsuario);
+
+        Navigation.NavigateTo("/seguridad/usuarios");
+    }
+
+    private void Volver()
+    {
+        Navigation.NavigateTo("/seguridad/usuarios");
+    }
+}

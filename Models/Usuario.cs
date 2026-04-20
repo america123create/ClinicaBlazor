@@ -3,30 +3,25 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ClinicaBlazor.Models
 {
+    [Table("usuarios")]
     public class Usuario
     {
         public int Id { get; set; }
 
         [Column("nombre")]
-        [Required(ErrorMessage = "El nombre es obligatorio")]
-        public string Nombre { get; set; } = string.Empty;
+        public string Nombre { get; set; } = "";
 
         [Column("correo")]
-        [Required(ErrorMessage = "El correo es obligatorio")]
-        [EmailAddress(ErrorMessage = "El correo no tiene un formato válido")]
-        public string Correo { get; set; } = string.Empty;
+        public string Correo { get; set; } = "";
 
         [Column("username")]
-        [Required(ErrorMessage = "El nombre de usuario es obligatorio")]
-        public string Username { get; set; } = string.Empty;
+        public string Username { get; set; } = "";
 
         [Column("password")]
-        [Required(ErrorMessage = "La contraseña es obligatoria")]
-        public string Password { get; set; } = string.Empty;
+        public string Password { get; set; } = "";
 
         [Column("perfil")]
-        [Required(ErrorMessage = "El perfil es obligatorio")]
-        public string Perfil { get; set; } = string.Empty;
+        public string Perfil { get; set; } = "";
 
         [Column("activo")]
         public bool Activo { get; set; }
@@ -35,7 +30,6 @@ namespace ClinicaBlazor.Models
         public string? Imagen { get; set; }
 
         [Column("numero_celular")]
-        [RegularExpression(@"^\d{10}$", ErrorMessage = "El número celular debe tener exactamente 10 dígitos")]
         public string? NumeroCelular { get; set; }
     }
 }

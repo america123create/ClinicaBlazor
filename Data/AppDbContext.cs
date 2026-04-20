@@ -13,6 +13,7 @@ namespace ClinicaBlazor.Data
         public DbSet<Perfil> Perfiles { get; set; }
         public DbSet<Modulo> Modulos { get; set; }
         public DbSet<PermisoPerfil> PermisosPerfil { get; set; }
+        public DbSet<PermisoPerfil> PermisoPerfiles { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -23,6 +23,12 @@ namespace ClinicaBlazor.Services
                 .ToListAsync();
         }
 
+        public async Task<Modulo?> ObtenerPorIdAsync(int id)
+        {
+            using var context = _dbFactory.CreateDbContext();
+            return await context.Modulos.FindAsync(id);
+        }
+
         public async Task GuardarAsync(Modulo modulo)
         {
             using var context = _dbFactory.CreateDbContext();

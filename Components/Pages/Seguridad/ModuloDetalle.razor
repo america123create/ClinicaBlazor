@@ -1,0 +1,159 @@
+﻿@page "/seguridad/modulos/detalle/{id:int}"
+@rendermode InteractiveServer
+
+@using ClinicaBlazor.Models
+@using ClinicaBlazor.Services
+
+@inject ModuloService ModuloService
+@inject NavigationManager Navigation
+
+<PageTitle>Detalle Módulo</PageTitle>
+
+@if (modulo == null)
+{
+    <div class="loading-box">
+        <p>Cargando módulo...</p>
+    </div>
+}
+else
+{
+    <div class="detail-container fade-in">
+
+        <!-- HEADER -->
+        <div class="detail-header">
+            <h2>📦 Detalle del Módulo</h2>
+            <button class="btn-back" @onclick="Volver">← Volver</button>
+        </div>
+
+        <!-- CARD -->
+        <div class="detail-card">
+
+            <div class="detail-item">
+                <span class="label">ID</span>
+                <span class="value">@modulo.Id</span>
+            </div>
+
+            <div class="detail-item">
+                <span class="label">Nombre</span>
+                <span class="value">@modulo.Nombre</span>
+            </div>
+
+            <div class="detail-item">
+                <span class="label">Clave</span>
+                <span class="value">@modulo.Clave</span>
+            </div>
+
+            <div class="detail-item">
+                <span class="label">Ruta</span>
+                <span class="value">@modulo.Ruta</span>
+            </div>
+
+        </div>
+
+    </div>
+}
+
+@code {
+    [Parameter] public int id { get; set; }
+
+    private Modulo? modulo;
+
+    protected override async Task OnInitializedAsync()
+    {
+        modulo = await ModuloService.ObtenerPorIdAsync(id);
+
+        // 🔥 si no existe → regresar
+        if (modulo == null)
+        {
+            Navigation.NavigateTo("/seguridad/modulos");
+        }
+    }
+
+    private void Volver()
+    {
+        Navigation.NavigateTo("/seguridad/modulos");
+    }
+}
+
+<style>
+    /* 🌸 CONTENEDOR */
+    .detail-container {
+        max-width: 700px;
+        margin: auto;
+        margin-top: 30px;
+    }
+
+    /* 🌸 HEADER */
+    .detail-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(135deg, #ff4da6, #ff80bf);
+        padding: 20px;
+        border-radius: 15px;
+        color: white;
+        box-shadow: 0 10px 25px rgba(255, 0, 128, 0.2);
+    }
+
+    /* 🌸 BOTÓN VOLVER */
+    .btn-back {
+        background: white;
+        color: #ff4da6;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 10px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+        .btn-back:hover {
+            background: #ffe6f0;
+        }
+
+    /* 🌸 CARD */
+    .detail-card {
+        margin-top: 20px;
+        background: white;
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 15px 30px rgba(255, 0, 128, 0.1);
+        animation: fadeUp 0.5s ease;
+    }
+
+    /* 🌸 ITEMS */
+    .detail-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid #f2f2f2;
+    }
+
+    /* 🌸 TEXTO */
+    .label {
+        font-weight: bold;
+        color: #ff4da6;
+    }
+
+    .value {
+        color: #333;
+    }
+
+    /* 🌸 LOADING */
+    .loading-box {
+        text-align: center;
+        margin-top: 50px;
+    }
+
+    /* 🌸 ANIMACIONES */
+    .fade-in {
+        animation: fadeIn 0.4s ease;
+    }
+
+    @@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+   
+    
+</style>

@@ -8,14 +8,17 @@
 <header class="topbar">
     <div class="topbar-inner">
         <div class="topbar-left">
-            <a class="brand" href="/dashboard">ClinicaBlazor</a>
+            <a class="brand" href="/dashboard">
+                <span class="brand-icon">🏥</span>
+                ClinicaBlazor
+            </a>
 
             @if (cargado && haySesion)
             {
                 <nav class="topnav">
                     <a class="topnav-link @(EsRutaActiva("/dashboard") ? "active" : "")"
                        href="/dashboard">
-                        Inicio
+                        🏠 Inicio
                     </a>
 
                     @if (TieneAlgunaRutaSeguridad())
@@ -24,28 +27,33 @@
                             <button type="button"
                                     class="topnav-link dropdown-toggle @(EsSeccionActiva("/seguridad") ? "active" : "")"
                                     @onclick='() => ToggleMenu("seguridad")'>
-                                Seguridad
+                                🔐 Seguridad <span class="arrow @(menuAbierto == "seguridad" ? "open" : "")">▾</span>
                             </button>
 
                             <div class="dropdown-menu @(menuAbierto == "seguridad" ? "show" : "")">
                                 @if (rutasPermitidas.Contains("/seguridad/perfil"))
                                 {
-                                    <a href="/seguridad/perfil" @onclick="CerrarMenus">Perfil</a>
+                                    <a class="dropdown-item" href="/seguridad/perfil" @onclick="CerrarMenus">
+                                        <span class="item-icon">👤</span> Perfil
+                                    </a>
                                 }
-
                                 @if (rutasPermitidas.Contains("/seguridad/modulos"))
                                 {
-                                    <a href="/seguridad/modulos" @onclick="CerrarMenus">Módulo</a>
+                                    <a class="dropdown-item" href="/seguridad/modulos" @onclick="CerrarMenus">
+                                        <span class="item-icon">📦</span> Módulos
+                                    </a>
                                 }
-
                                 @if (rutasPermitidas.Contains("/seguridad/permisos-perfil"))
                                 {
-                                    <a href="/seguridad/permisos-perfil" @onclick="CerrarMenus">Permisos - Perfil</a>
+                                    <a class="dropdown-item" href="/seguridad/permisos-perfil" @onclick="CerrarMenus">
+                                        <span class="item-icon">🔑</span> Permisos por Perfil
+                                    </a>
                                 }
-
                                 @if (rutasPermitidas.Contains("/seguridad/usuarios"))
                                 {
-                                    <a href="/seguridad/usuarios" @onclick="CerrarMenus">Usuario</a>
+                                    <a class="dropdown-item" href="/seguridad/usuarios" @onclick="CerrarMenus">
+                                        <span class="item-icon">👥</span> Usuarios
+                                    </a>
                                 }
                             </div>
                         </div>
@@ -57,23 +65,27 @@
                             <button type="button"
                                     class="topnav-link dropdown-toggle @(EsSeccionActiva("/principal1") ? "active" : "")"
                                     @onclick='() => ToggleMenu("principal1")'>
-                                Principal 1
+                                Director 1 <span class="arrow @(menuAbierto == "principal1" ? "open" : "")">▾</span>
                             </button>
 
                             <div class="dropdown-menu @(menuAbierto == "principal1" ? "show" : "")">
                                 @if (rutasPermitidas.Contains("/principal1"))
                                 {
-                                    <a href="/principal1" @onclick="CerrarMenus">Principal 1</a>
+                                    <a class="dropdown-item" href="/principal1" @onclick="CerrarMenus">
+                                        <span class="item-icon">📋</span> Principal 1
+                                    </a>
                                 }
-
                                 @if (rutasPermitidas.Contains("/principal1/uno"))
                                 {
-                                    <a href="/principal1/uno" @onclick="CerrarMenus">Principal 1.1</a>
+                                    <a class="dropdown-item" href="/principal1/uno" @onclick="CerrarMenus">
+                                        <span class="item-icon">▸</span> Principal 1.1
+                                    </a>
                                 }
-
                                 @if (rutasPermitidas.Contains("/principal1/dos"))
                                 {
-                                    <a href="/principal1/dos" @onclick="CerrarMenus">Principal 1.2</a>
+                                    <a class="dropdown-item" href="/principal1/dos" @onclick="CerrarMenus">
+                                        <span class="item-icon">▸</span> Principal 1.2
+                                    </a>
                                 }
                             </div>
                         </div>
@@ -85,23 +97,27 @@
                             <button type="button"
                                     class="topnav-link dropdown-toggle @(EsSeccionActiva("/principal2") ? "active" : "")"
                                     @onclick='() => ToggleMenu("principal2")'>
-                                Principal 2
+                                Director 2 <span class="arrow @(menuAbierto == "principal2" ? "open" : "")">▾</span>
                             </button>
 
                             <div class="dropdown-menu @(menuAbierto == "principal2" ? "show" : "")">
                                 @if (rutasPermitidas.Contains("/principal2"))
                                 {
-                                    <a href="/principal2" @onclick="CerrarMenus">Principal 2</a>
+                                    <a class="dropdown-item" href="/principal2" @onclick="CerrarMenus">
+                                        <span class="item-icon">📋</span> Principal 2
+                                    </a>
                                 }
-
                                 @if (rutasPermitidas.Contains("/principal2/uno"))
                                 {
-                                    <a href="/principal2/uno" @onclick="CerrarMenus">Principal 2.1</a>
+                                    <a class="dropdown-item" href="/principal2/uno" @onclick="CerrarMenus">
+                                        <span class="item-icon">▸</span> Principal 2.1
+                                    </a>
                                 }
-
                                 @if (rutasPermitidas.Contains("/principal2/dos"))
                                 {
-                                    <a href="/principal2/dos" @onclick="CerrarMenus">Principal 2.2</a>
+                                    <a class="dropdown-item" href="/principal2/dos" @onclick="CerrarMenus">
+                                        <span class="item-icon">▸</span> Principal 2.2
+                                    </a>
                                 }
                             </div>
                         </div>
@@ -113,50 +129,65 @@
                             <button type="button"
                                     class="topnav-link dropdown-toggle"
                                     @onclick='() => ToggleMenu("modulos")'>
-                                Módulos
+                                🗂 Módulos <span class="arrow @(menuAbierto == "modulos" ? "open" : "")">▾</span>
                             </button>
 
                             <div class="dropdown-menu @(menuAbierto == "modulos" ? "show" : "")">
-                                <a href="/dashboard" @onclick="CerrarMenus">Salpicadero</a>
-
+                                <a class="dropdown-item" href="/dashboard" @onclick="CerrarMenus">
+                                    <span class="item-icon">🏠</span> Salpicadero
+                                </a>
+                                <div class="dropdown-divider"></div>
                                 @if (rutasPermitidas.Contains("/seguridad/perfil"))
                                 {
-                                    <a href="/seguridad/perfil" @onclick="CerrarMenus">Perfiles</a>
+                                    <a class="dropdown-item" href="/seguridad/perfil" @onclick="CerrarMenus">
+                                        <span class="item-icon">👤</span> Perfiles
+                                    </a>
                                 }
-
                                 @if (rutasPermitidas.Contains("/seguridad/usuarios"))
                                 {
-                                    <a href="/seguridad/usuarios" @onclick="CerrarMenus">Usuarios</a>
+                                    <a class="dropdown-item" href="/seguridad/usuarios" @onclick="CerrarMenus">
+                                        <span class="item-icon">👥</span> Usuarios
+                                    </a>
                                 }
-
                                 @if (rutasPermitidas.Contains("/seguridad/modulos"))
                                 {
-                                    <a href="/seguridad/modulos" @onclick="CerrarMenus">Módulos</a>
+                                    <a class="dropdown-item" href="/seguridad/modulos" @onclick="CerrarMenus">
+                                        <span class="item-icon">📦</span> Módulos
+                                    </a>
                                 }
-
                                 @if (rutasPermitidas.Contains("/seguridad/permisos-perfil"))
                                 {
-                                    <a href="/seguridad/permisos-perfil" @onclick="CerrarMenus">Permisos Perfil</a>
+                                    <a class="dropdown-item" href="/seguridad/permisos-perfil" @onclick="CerrarMenus">
+                                        <span class="item-icon">🔑</span> Permisos Perfil
+                                    </a>
                                 }
-
+                                @if (rutasPermitidas.Contains("/principal1/uno") || rutasPermitidas.Contains("/principal1/dos"))
+                                {
+                                    <div class="dropdown-divider"></div>
+                                }
                                 @if (rutasPermitidas.Contains("/principal1/uno"))
                                 {
-                                    <a href="/principal1/uno" @onclick="CerrarMenus">Principal 1.1</a>
+                                    <a class="dropdown-item" href="/principal1/uno" @onclick="CerrarMenus">
+                                        <span class="item-icon">▸</span> Principal 1.1
+                                    </a>
                                 }
-
                                 @if (rutasPermitidas.Contains("/principal1/dos"))
                                 {
-                                    <a href="/principal1/dos" @onclick="CerrarMenus">Principal 1.2</a>
+                                    <a class="dropdown-item" href="/principal1/dos" @onclick="CerrarMenus">
+                                        <span class="item-icon">▸</span> Principal 1.2
+                                    </a>
                                 }
-
                                 @if (rutasPermitidas.Contains("/principal2/uno"))
                                 {
-                                    <a href="/principal2/uno" @onclick="CerrarMenus">Principal 2.1</a>
+                                    <a class="dropdown-item" href="/principal2/uno" @onclick="CerrarMenus">
+                                        <span class="item-icon">▸</span> Principal 2.1
+                                    </a>
                                 }
-
                                 @if (rutasPermitidas.Contains("/principal2/dos"))
                                 {
-                                    <a href="/principal2/dos" @onclick="CerrarMenus">Principal 2.2</a>
+                                    <a class="dropdown-item" href="/principal2/dos" @onclick="CerrarMenus">
+                                        <span class="item-icon">▸</span> Principal 2.2
+                                    </a>
                                 }
                             </div>
                         </div>
@@ -169,12 +200,15 @@
             @if (cargado && haySesion)
             {
                 <div class="user-pill">
-                    <span class="user-label">Hola,</span>
-                    <span class="user-name">@nombreUsuario</span>
+                    <div class="user-avatar">@(nombreUsuario?.Substring(0, 1).ToUpper() ?? "U")</div>
+                    <div class="user-info">
+                        <span class="user-greeting">Hola,</span>
+                        <span class="user-name">@nombreUsuario</span>
+                    </div>
                 </div>
 
                 <button class="logout-btn" @onclick="Salir">
-                    Cerrar Sesión
+                    <span>⏻</span> Cerrar Sesión
                 </button>
             }
             else

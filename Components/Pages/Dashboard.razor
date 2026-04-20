@@ -1,5 +1,6 @@
 ﻿@page "/dashboard"
 @rendermode InteractiveServer
+
 @using ClinicaBlazor.Services
 @inject SesionService SesionService
 @inject NavigationManager Navigation
@@ -8,74 +9,92 @@
 
 @if (!cargado)
 {
-    <p>Cargando...</p>
+    <div class="dashboard-v3">
+        <div class="card-v3">Cargando...</div>
+    </div>
 }
 else if (!haySesion)
 {
-    <p>Redirigiendo...</p>
+    <div class="dashboard-v3">
+        <div class="card-v3">Redirigiendo...</div>
+    </div>
 }
 else
 {
-    <Breadcrumbs Items="breadcrumbItems" />
+    <div class="dashboard-pink">
 
-    <section class="dashboard-shell">
-        <article class="profile-card-v2">
-            <div class="profile-card-v2__header">
-                <div class="profile-avatar-v2"></div>
+        <!-- HEADER -->
+        <div class="dashboard-header-pink">
+
+            <div>
+                <h1>🏥 ClinicaBlazor</h1>
+                <p>Panel de control del sistema</p>
+            </div>
+
+            <div class="user-chip-pink">
+                <div class="avatar-pink">
+                    @nombreUsuario.Substring(0, 1)
+                </div>
 
                 <div>
-                    <h2>Perfil de Usuario</h2>
-                    <p>Datos de acceso y credenciales</p>
+                    <strong>@nombreUsuario</strong><br />
+                    <small>@perfilUsuario</small>
                 </div>
             </div>
 
-            <div class="profile-card-v2__body">
-                <div class="profile-row-v2">
-                    <span class="profile-label-v2">Nombre completo</span>
-                    <span class="profile-value-v2">@nombreUsuario</span>
+        </div>
+
+        <Breadcrumbs Items="breadcrumbItems" />
+
+        <!-- GRID -->
+        <div class="dashboard-grid-pink">
+
+            <!-- PERFIL -->
+            <div class="card-pink">
+
+                <h3>👤 Perfil de Usuario</h3>
+
+                <div class="row">
+                    <span>Nombre:</span>
+                    <strong>@nombreUsuario</strong>
                 </div>
 
-                <div class="profile-row-v2">
-                    <span class="profile-label-v2">Correo electrónico</span>
-                    <span class="profile-value-v2">@correoUsuario</span>
+                <div class="row">
+                    <span>Correo:</span>
+                    <strong>@correoUsuario</strong>
                 </div>
 
-                <div class="profile-row-v2">
-                    <span class="profile-label-v2">Perfil asignado</span>
-                    <span class="profile-value-v2">@perfilUsuario</span>
+                <div class="row">
+                    <span>Perfil:</span>
+                    <span class="badge-pink">@perfilUsuario</span>
                 </div>
 
-                <div class="profile-row-v2">
-                    <span class="profile-label-v2">Estado de la cuenta</span>
-                    <span class="status-pill active">• Activo</span>
-                </div>
+                <div class="status-pink">● Activo</div>
+
             </div>
 
-            <div class="profile-card-v2__footer">
-                Acceso autorizado al sistema corporativo
+            <!-- BIENVENIDA -->
+            <div class="card-pink welcome-pink">
+
+                <div class="tag-pink">Panel de Control</div>
+
+                <h2>Bienvenido, @nombreUsuario</h2>
+
+                <p>
+                    Sistema clínico de gestión con seguridad, usuarios y permisos centralizados.
+                </p>
+
+                <div class="chips-pink">
+                    <span>🔐 Seguridad</span>
+                    <span>👥 Usuarios</span>
+                    <span>⚙️ Permisos</span>
+                </div>
+
             </div>
-        </article>
 
-        <article class="welcome-card-v2">
-            <div class="welcome-badge-v2">Panel de Control</div>
+        </div>
 
-            <h1>
-                Bienvenido, <span>@nombreUsuario</span>
-            </h1>
-
-            <p>
-                Le damos la bienvenida al sistema de gestión corporativa. Desde este panel
-                central podrá administrar y supervisar los módulos disponibles con seguridad
-                y eficiencia.
-            </p>
-
-            <div class="welcome-tags-v2">
-                <div class="welcome-tag-v2">Acceso seguro</div>
-                <div class="welcome-tag-v2">Protección de datos</div>
-                <div class="welcome-tag-v2">Permisos por perfil</div>
-            </div>
-        </article>
-    </section>
+    </div>
 }
 
 @code {

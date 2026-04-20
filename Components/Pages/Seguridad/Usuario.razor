@@ -1,511 +1,201 @@
 ﻿@page "/seguridad/usuarios"
 @rendermode InteractiveServer
-@using Microsoft.AspNetCore.Components.Forms
 @using ClinicaBlazor.Services
-@using Microsoft.AspNetCore.Hosting
-@using System.IO
 @inject UsuarioService UsuarioService
-@inject PerfilService PerfilService
-@inject PermisoPerfilService PermisoPerfilService
-@inject SesionService SesionService
 @inject NavigationManager Navigation
-@inject IWebHostEnvironment Env
+@inject IJSRuntime JS
 
 <PageTitle>Usuarios</PageTitle>
 
-@if (!cargado)
-{
-    <p>Cargando...</p>
-}
-else if (!haySesion)
-{
-    <p>Redirigiendo...</p>
-}
-else
-{
-    <Breadcrumbs Items="breadcrumbItems" />
+<section class="module-header">
+    <h1>Usuarios</h1>
+    <p>Gestión de usuarios del sistema</p>
 
-    <section class="module-header">
-        <h1>Usuarios</h1>
-        <p>Gestión de usuarios del sistema</p>
-    </section>
+    <div class="header-actions">
+        <input type="text"
+               class="input-search"
+               placeholder="Buscar usuario..."
+               @bind="filtro"
+               @bind:event="oninput" />
 
-    <section class="form-card">
-        <EditForm Model="nuevoUsuario" OnValidSubmit="GuardarUsuario">
-            <DataAnnotationsValidator />
-            <ValidationSummary />
+        <button class="btn-primary-custom"
+                @onclick="IrNuevoUsuario">
+            + Nuevo
+        </button>
+    </div>
+</section>
 
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Nombre</label>
-                    <InputText @bind-Value="nuevoUsuario.Nombre" class="form-control" />
-                </div>
+<section class="card-table">
+    <table class="custom-table">
+        <thead>
+            <tr>
+                <th>Imagen</th>
+                <th>Nombre</th>
+                <th>Correo</th>
+                <th>Usuario</th>
+                <th>Celular</th>
+                <th>Perfil</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
 
-                <div class="form-group">
-                    <label>Correo</label>
-                    <InputText @bind-Value="nuevoUsuario.Correo" class="form-control" />
-                </div>
-
-                <div class="form-group">
-                    <label>Nombre de usuario</label>
-                    <InputText @bind-Value="nuevoUsuario.Username" class="form-control" />
-                </div>
-
-                <div class="form-group">
-                    <label>Contraseña</label>
-                    <InputText @bind-Value="nuevoUsuario.Password" type="password" class="form-control" />
-                </div>
-
-                <div class="form-group">
-                    <label>Número celular</label>
-                    <InputText @bind-Value="nuevoUsuario.NumeroCelular" class="form-control" maxlength="10" />
-                </div>
-
-                <div class="form-group">
-                    <label>Perfil</label>
-                    <InputSelect @bind-Value="nuevoUsuario.Perfil" class="form-control">
-                        <option value="">Seleccione un perfil</option>
-                        @foreach (var perfil in perfilesDisponibles)
-                        {
-                            <option value="@perfil.Nombre">@perfil.Nombre</option>
-                        }
-                    </InputSelect>
-                </div>
-
-                <div class="form-group checkbox-group">
-                    <label>Estado</label>
-                    <label class="checkbox-inline">
-                        <InputCheckbox @bind-Value="nuevoUsuario.Activo" />
-                        Activo
-                    </label>
-                </div>
-
-                <div class="form-group full-width">
-                    <label>Imagen del usuario</label>
-                    <InputFile OnChange="SeleccionarImagen" accept="image/*" class="form-control" />
-                </div>
-
-                @if (!string.IsNullOrWhiteSpace(previewImagen))
-                {
-                    <div class="form-group full-width">
-                        <label>Vista previa</label>
-                        <div class="preview-box">
-                            <img src="@previewImagen" alt="Vista previa" class="user-preview-image" />
-                        </div>
-                    </div>
-                }
-
-                <div class="form-actions full-width">
-                    @if ((nuevoUsuario.Id == 0 && puedeAgregar) || (nuevoUsuario.Id != 0 && puedeEditar))
-                    {
-                        <button type="submit" class="btn btn-primary module-add-btn">
-                            @(nuevoUsuario.Id == 0 ? "Guardar usuario" : "Actualizar usuario")
-                        </button>
-                    }
-
-                    @if (nuevoUsuario.Id != 0)
-                    {
-                        <button type="button" class="btn btn-secondary" @onclick="CancelarEdicion">
-                            Cancelar
-                        </button>
-                    }
-                </div>
-            </div>
-        </EditForm>
-    </section>
-
-    @if (!string.IsNullOrEmpty(mensaje))
-    {
-        <div class="alert alert-success">@mensaje</div>
-    }
-
-    @if (mostrarDetalle && usuarioDetalle != null)
-    {
-        <section class="detail-card">
-            <h3>Detalle del usuario</h3>
-
-            <div class="detail-grid">
-                <div class="detail-image-box">
-                    @if (!string.IsNullOrWhiteSpace(usuarioDetalle.Imagen))
-                    {
-                        <img src="@usuarioDetalle.Imagen" alt="Imagen usuario" class="detail-user-image" />
-                    }
-                    else
-                    {
-                        <div class="detail-image-placeholder">Sin imagen</div>
-                    }
-                </div>
-
-                <div class="detail-info">
-                    <p><strong>ID:</strong> @usuarioDetalle.Id</p>
-                    <p><strong>Nombre:</strong> @usuarioDetalle.Nombre</p>
-                    <p><strong>Correo:</strong> @usuarioDetalle.Correo</p>
-                    <p><strong>Username:</strong> @usuarioDetalle.Username</p>
-                    <p><strong>Número celular:</strong> @usuarioDetalle.NumeroCelular</p>
-                    <p><strong>Perfil:</strong> @usuarioDetalle.Perfil</p>
-                    <p><strong>Activo:</strong> @(usuarioDetalle.Activo ? "Sí" : "No")</p>
-                </div>
-            </div>
-
-            <button class="btn btn-secondary" @onclick="CerrarDetalle">
-                Cerrar detalle
-            </button>
-        </section>
-    }
-
-    <section class="module-table-card">
-        <table class="module-table">
-            <thead>
+        <tbody>
+            @foreach (var u in usuariosFiltrados)
+            {
                 <tr>
-                    <th>Imagen</th>
-                    <th>Nombre</th>
-                    <th>Correo</th>
-                    <th>Usuario</th>
-                    <th>Celular</th>
-                    <th>Perfil</th>
-                    <th>Estatus</th>
-                    <th>Acciones</th>
+                    <td>
+                        @if (!string.IsNullOrWhiteSpace(u.Imagen))
+                        {
+                            <img src="@u.Imagen" class="user-img" />
+                        }
+                        else
+                        {
+                            <div class="img-placeholder">👤</div>
+                        }
+                    </td>
+
+                    <td>@u.Nombre</td>
+                    <td>@u.Correo</td>
+                    <td>@u.Username</td>
+                    <td>@u.NumeroCelular</td>
+                    <td>@u.Perfil</td>
+
+                    <td>
+                        <span class="status @(u.Activo ? "activo" : "inactivo")">
+                            @(u.Activo ? "Activo" : "Inactivo")
+                        </span>
+                    </td>
+
+                    <!-- 🔥 ACCIONES -->
+                    <td>
+                        <div class="actions">
+
+                            <!-- 👁 DETALLE -->
+                            <button class="btn-action detail"
+                                    @onclick="() => VerDetalle(u)">
+                                👁
+                            </button>
+
+                            <!-- ✏ EDITAR -->
+                            <button class="btn-action edit"
+                                    @onclick="() => EditarUsuario(u.Id)">
+                                ✏
+                            </button>
+
+                            <!-- 🗑 ELIMINAR -->
+                            <button class="btn-action delete"
+                                    @onclick="@(() => ConfirmarEliminar(u.Id))">
+                                🗑
+                            </button>
+
+                        </div>
+                    </td>
                 </tr>
-            </thead>
-            <tbody>
-                @foreach (var usuario in usuariosPaginados)
-                {
-                    <tr>
-                        <td>
-                            @if (!string.IsNullOrWhiteSpace(usuario.Imagen))
-                            {
-                                <img src="@usuario.Imagen" alt="Usuario" class="table-user-image" />
-                            }
-                            else
-                            {
-                                <div class="table-image-placeholder">Sin imagen</div>
-                            }
-                        </td>
-                        <td>@usuario.Nombre</td>
-                        <td>@usuario.Correo</td>
-                        <td>@usuario.Username</td>
-                        <td>@usuario.NumeroCelular</td>
-                        <td>@usuario.Perfil</td>
-                        <td>
-                            <span class="status-pill @(usuario.Activo ? "active" : "inactive")">
-                                • @(usuario.Activo ? "Activo" : "Inactivo")
-                            </span>
-                        </td>
-                        <td>
-                            <div class="action-group">
-                                @if (puedeDetalle)
-                                {
-                                    <button class="btn-action detail" @onclick="() => VerDetalle(usuario)">Detalle</button>
-                                }
+            }
+        </tbody>
+        <div class="pagination-pro">
+            <button @onclick="Anterior" disabled="@(paginaActual == 1)">«</button>
 
-                                @if (puedeEditar)
-                                {
-                                    <button class="btn-action edit" @onclick="() => EditarUsuario(usuario)">Editar</button>
-                                }
+            <span>Página @paginaActual de @totalPaginas</span>
 
-                                @if (puedeEliminar)
-                                {
-                                    <button class="btn-action delete" @onclick="() => EliminarUsuario(usuario.Id)">Eliminar</button>
-                                }
-                            </div>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </section>
-
-    <section class="module-footer-card">
-        <span>Página @paginaActual de @TotalPaginas</span>
-
-        <div class="action-group">
-            <button class="btn btn-secondary" @onclick="PaginaAnterior" disabled="@(paginaActual == 1)">
-                &lt;
-            </button>
-
-            <button class="btn btn-secondary" @onclick="PaginaSiguiente" disabled="@(paginaActual == TotalPaginas)">
-                &gt;
-            </button>
+            <button @onclick="Siguiente" disabled="@(paginaActual == totalPaginas)">»</button>
         </div>
-    </section>
-}
+    </table>
+</section>
 
 @code {
-    private bool cargado;
-    private bool haySesion;
-    private string? mensaje;
-
-    private bool puedeAgregar;
-    private bool puedeEditar;
-    private bool puedeEliminar;
-    private bool puedeConsultar;
-    private bool puedeDetalle;
-
-    private bool mostrarDetalle;
-    private ClinicaBlazor.Models.Usuario? usuarioDetalle;
-
-    private int paginaActual = 1;
-    private int filasPorPagina = 5;
-
-    private ClinicaBlazor.Models.Usuario nuevoUsuario = new();
     private List<ClinicaBlazor.Models.Usuario> usuarios = new();
-    private List<ClinicaBlazor.Models.Perfil> perfilesDisponibles = new();
+    private string filtro = "";
+    private bool mostrarModalEliminar = false;
+    private int usuarioAEliminarId;
+    private int paginaActual = 1;
+    private int registrosPorPagina = 5;
 
-    private IBrowserFile? archivoImagen;
-    private string? previewImagen;
+    private int totalPaginas =>
+        (int)Math.Ceiling((double)usuarios.Count / registrosPorPagina);
+   
 
-    private List<BreadcrumbItem> breadcrumbItems = new()
+    protected override async Task OnInitializedAsync()
     {
-        new BreadcrumbItem { Texto = "Inicio", Url = "/dashboard" },
-        new BreadcrumbItem { Texto = "Seguridad" },
-        new BreadcrumbItem { Texto = "Usuario" }
-    };
+        usuarios = await UsuarioService.ObtenerUsuarios();
+    }
 
-    private int TotalPaginas =>
-        usuarios.Count == 0 ? 1 : (int)Math.Ceiling((double)usuarios.Count / filasPorPagina);
+    private List<ClinicaBlazor.Models.Usuario> usuariosFiltrados =>
+        usuarios.Where(u =>
+            string.IsNullOrWhiteSpace(filtro) ||
+            (u.Nombre?.Contains(filtro, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (u.Username?.Contains(filtro, StringComparison.OrdinalIgnoreCase) ?? false)
+        ).ToList();
 
-    private List<ClinicaBlazor.Models.Usuario> usuariosPaginados =>
-        usuarios.Skip((paginaActual - 1) * filasPorPagina).Take(filasPorPagina).ToList();
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    private void IrNuevoUsuario()
     {
-        if (!firstRender) return;
+        Navigation.NavigateTo("/seguridad/usuarios/nuevo");
+    }
+    private void EditarUsuario(int id)
+    {
+        Navigation.NavigateTo($"/seguridad/usuarios/editar/{id}");
+    }
 
-        haySesion = await SesionService.HaySesionAsync();
+    private void VerDetalle(ClinicaBlazor.Models.Usuario u)
+    {
+        Navigation.NavigateTo($"/seguridad/usuarios/detalle/{u.Id}");
+    }
 
-        if (!haySesion)
-        {
-            cargado = true;
-            StateHasChanged();
-            Navigation.NavigateTo("/login", true);
-            return;
-        }
-
-        var perfilNombre = await SesionService.ObtenerPerfilAsync();
-
-        if (!string.IsNullOrWhiteSpace(perfilNombre))
-        {
-            var perfilSesion = await PerfilService.ObtenerPorNombreAsync(perfilNombre);
-
-            if (perfilSesion != null)
-            {
-                var permiso = await PermisoPerfilService.ObtenerPermisoPorPerfilYRutaAsync(perfilSesion.Id, "/seguridad/usuarios");
-
-                if (permiso != null)
-                {
-                    puedeAgregar = permiso.Agregar;
-                    puedeEditar = permiso.Editar;
-                    puedeEliminar = permiso.Eliminar;
-                    puedeConsultar = permiso.Consultar;
-                    puedeDetalle = permiso.Detalle;
-                }
-            }
-        }
-
-        if (!puedeConsultar)
-        {
-            cargado = true;
-            StateHasChanged();
-            Navigation.NavigateTo("/dashboard", true);
-            return;
-        }
-
-        await CargarPerfiles();
-        await CargarUsuarios();
-        cargado = true;
-        StateHasChanged();
+    private void ConfirmarEliminar(int id)
+    {
+        usuarioAEliminarId = id;
+        mostrarModalEliminar = true;
     }
 
     private async Task CargarUsuarios()
     {
-        usuarios = await UsuarioService.ObtenerTodosAsync();
+        usuarios = await UsuarioService.ObtenerUsuarios();
     }
 
-    private async Task CargarPerfiles()
+    private async Task EliminarConfirmado()
     {
-        perfilesDisponibles = await PerfilService.ObtenerTodosAsync();
-    }
+        await UsuarioService.EliminarAsync(usuarioAEliminarId);
 
-    private async Task SeleccionarImagen(InputFileChangeEventArgs e)
-    {
-        archivoImagen = e.File;
-
-        if (archivoImagen != null)
-        {
-            try
-            {
-                using var stream = archivoImagen.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
-                using var ms = new MemoryStream();
-                await stream.CopyToAsync(ms);
-                var base64 = Convert.ToBase64String(ms.ToArray());
-                previewImagen = $"data:{archivoImagen.ContentType};base64,{base64}";
-            }
-            catch
-            {
-                mensaje = "No se pudo cargar la vista previa de la imagen.";
-            }
-        }
-    }
-
-    private async Task<string?> GuardarImagenAsync()
-    {
-        if (archivoImagen == null)
-            return nuevoUsuario.Imagen;
-
-        var extension = Path.GetExtension(archivoImagen.Name);
-        var nombreArchivo = $"{Guid.NewGuid()}{extension}";
-        var carpetaUploads = Path.Combine(Env.WebRootPath, "uploads", "usuarios");
-
-        if (!Directory.Exists(carpetaUploads))
-            Directory.CreateDirectory(carpetaUploads);
-
-        var rutaCompleta = Path.Combine(carpetaUploads, nombreArchivo);
-
-        using var fs = new FileStream(rutaCompleta, FileMode.Create);
-        await archivoImagen.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024).CopyToAsync(fs);
-
-        return $"/uploads/usuarios/{nombreArchivo}";
-    }
-
-    private async Task GuardarUsuario()
-    {
-        mensaje = null;
-
-        if (nuevoUsuario.Id == 0 && !puedeAgregar)
-        {
-            mensaje = "No tienes permiso para agregar.";
-            return;
-        }
-
-        if (nuevoUsuario.Id != 0 && !puedeEditar)
-        {
-            mensaje = "No tienes permiso para editar.";
-            return;
-        }
-
-        nuevoUsuario.Imagen = await GuardarImagenAsync();
-        await UsuarioService.GuardarAsync(nuevoUsuario);
-
-        mensaje = nuevoUsuario.Id == 0
-            ? "Usuario guardado correctamente."
-            : "Usuario actualizado correctamente.";
-
-        nuevoUsuario = new ClinicaBlazor.Models.Usuario();
-        archivoImagen = null;
-        previewImagen = null;
-
+        mostrarModalEliminar = false;
         await CargarUsuarios();
-        ReiniciarPaginacionSiHaceFalta();
     }
-
-    private void EditarUsuario(ClinicaBlazor.Models.Usuario usuario)
-    {
-        mensaje = null;
-        mostrarDetalle = false;
-        usuarioDetalle = null;
-
-        nuevoUsuario = new ClinicaBlazor.Models.Usuario
-        {
-            Id = usuario.Id,
-            Nombre = usuario.Nombre,
-            Correo = usuario.Correo,
-            Username = usuario.Username,
-            Password = usuario.Password,
-            Perfil = usuario.Perfil,
-            Activo = usuario.Activo,
-            Imagen = usuario.Imagen,
-            NumeroCelular = usuario.NumeroCelular
-        };
-
-        previewImagen = usuario.Imagen;
-        archivoImagen = null;
-    }
-
-    private void CancelarEdicion()
-    {
-        mensaje = null;
-        nuevoUsuario = new ClinicaBlazor.Models.Usuario();
-        archivoImagen = null;
-        previewImagen = null;
-    }
-
-    private async Task EliminarUsuario(int id)
-    {
-        mensaje = null;
-
-        if (!puedeEliminar)
-        {
-            mensaje = "No tienes permiso para eliminar.";
-            return;
-        }
-
-        await UsuarioService.EliminarAsync(id);
-        mensaje = "Usuario eliminado correctamente.";
-
-        if (nuevoUsuario.Id == id)
-        {
-            nuevoUsuario = new ClinicaBlazor.Models.Usuario();
-            archivoImagen = null;
-            previewImagen = null;
-        }
-
-        if (usuarioDetalle?.Id == id)
-        {
-            usuarioDetalle = null;
-            mostrarDetalle = false;
-        }
-
-        await CargarUsuarios();
-        ReiniciarPaginacionSiHaceFalta();
-    }
-
-    private void VerDetalle(ClinicaBlazor.Models.Usuario usuario)
-    {
-        mensaje = null;
-
-        if (!puedeDetalle)
-        {
-            mensaje = "No tienes permiso para ver detalle.";
-            return;
-        }
-
-        usuarioDetalle = new ClinicaBlazor.Models.Usuario
-        {
-            Id = usuario.Id,
-            Nombre = usuario.Nombre,
-            Correo = usuario.Correo,
-            Username = usuario.Username,
-            Password = usuario.Password,
-            Perfil = usuario.Perfil,
-            Activo = usuario.Activo,
-            Imagen = usuario.Imagen,
-            NumeroCelular = usuario.NumeroCelular
-        };
-
-        mostrarDetalle = true;
-    }
-
-    private void CerrarDetalle()
-    {
-        mostrarDetalle = false;
-        usuarioDetalle = null;
-    }
-
-    private void PaginaAnterior()
+    void Anterior()
     {
         if (paginaActual > 1)
             paginaActual--;
     }
 
-    private void PaginaSiguiente()
+    void Siguiente()
     {
-        if (paginaActual < TotalPaginas)
+        if (paginaActual < totalPaginas)
             paginaActual++;
     }
 
-    private void ReiniciarPaginacionSiHaceFalta()
+    private void CancelarEliminar()
     {
-        if (paginaActual > TotalPaginas)
-            paginaActual = TotalPaginas;
+        mostrarModalEliminar = false;
     }
+}
+
+@if (mostrarModalEliminar)
+{
+    <div class="modal-overlay">
+        <div class="modal-box animate-fade">
+
+            <h3>⚠️ Eliminar usuario</h3>
+            <p>¿Estás seguro de eliminar este usuario?</p>
+
+            <div class="modal-actions">
+                <button class="btn btn-secondary" @onclick="CancelarEliminar">
+                    Cancelar
+                </button>
+
+                <button class="btn btn-danger" @onclick="EliminarConfirmado">
+                    Eliminar
+                </button>
+            </div>
+
+        </div>
+    </div>
 }

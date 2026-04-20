@@ -1,0 +1,78 @@
+﻿@page "/seguridad/modulos/nuevo"
+@rendermode InteractiveServer
+@using ClinicaBlazor.Models
+@inject ModuloService ModuloService
+@inject NavigationManager Navigation
+
+<PageTitle>Nuevo Módulo</PageTitle>
+
+<section class="form-container">
+
+    <!-- HEADER -->
+    <div class="form-header">
+        <h2>➕ Nuevo Módulo</h2>
+        <p>Registra un nuevo módulo en el sistema</p>
+    </div>
+
+    <!-- FORM -->
+    <EditForm Model="modulo" OnValidSubmit="Guardar">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="form-grid">
+
+            <!-- NOMBRE -->
+            <div class="form-group">
+                <label>Nombre</label>
+                <InputText @bind-Value="modulo.Nombre" class="input-pro" />
+                <ValidationMessage For="@(() => modulo.Nombre)" />
+            </div>
+
+            <!-- CLAVE -->
+            <div class="form-group">
+                <label>Clave</label>
+                <InputText @bind-Value="modulo.Clave" class="input-pro" />
+                <ValidationMessage For="@(() => modulo.Clave)" />
+            </div>
+
+            <!-- RUTA -->
+            <div class="form-group full">
+                <label>Ruta</label>
+                <InputText @bind-Value="modulo.Ruta" class="input-pro" />
+            </div>
+
+        </div>
+
+        <!-- BOTONES -->
+        <div class="form-actions">
+
+            <button type="submit" class="btn-save">
+                💾 Guardar
+            </button>
+
+            <button type="button" class="btn-cancel"
+                    @onclick="Volver">
+                Cancelar
+            </button>
+
+        </div>
+
+    </EditForm>
+</section>
+
+@code {
+    private Modulo modulo = new();
+
+    private async Task Guardar()
+    {
+        await ModuloService.GuardarAsync(modulo);
+
+        // 🔥 redirección pro
+        Navigation.NavigateTo("/seguridad/modulos");
+    }
+
+    private void Volver()
+    {
+        Navigation.NavigateTo("/seguridad/modulos");
+    }
+}

@@ -1,0 +1,119 @@
+﻿@page "/seguridad/usuarios/detalle/{id:int}"
+@rendermode InteractiveServer
+
+@using ClinicaBlazor.Models
+@using ClinicaBlazor.Services
+
+@inject UsuarioService UsuarioService
+@inject NavigationManager Navigation
+
+<PageTitle>Detalle Usuario</PageTitle>
+
+<section class="module-header">
+    <h1>Detalle del Usuario</h1>
+    <p>Información completa del usuario</p>
+</section>
+
+@if (cargando)
+{
+    <p>Cargando...</p>
+}
+else if (usuario == null)
+{
+    <div class="alert alert-danger">Usuario no encontrado</div>
+}
+else
+{
+    <section class="detail-card-pro">
+
+        <!-- HEADER -->
+        <div class="detail-header">
+            <div class="avatar-container">
+                @if (!string.IsNullOrWhiteSpace(usuario.Imagen))
+                {
+                    <img src="@usuario.Imagen" class="avatar-img" />
+                }
+                else
+                {
+                    <div class="avatar-placeholder">
+                        @usuario.Nombre.Substring(0, 1).ToUpper()
+                    </div>
+                }
+            </div>
+
+            <div class="user-main-info">
+                <h2>@usuario.Nombre</h2>
+                <span class="username">@("@" + usuario.Username)</span>
+
+                <span class="status-pill @(usuario.Activo ? "active" : "inactive")">
+                    ● @(usuario.Activo ? "Activo" : "Inactivo")
+                </span>
+            </div>
+        </div>
+
+        <!-- BODY -->
+        <div class="detail-body">
+
+            <div class="info-item">
+                <label>Correo</label>
+                <p>@usuario.Correo</p>
+            </div>
+
+            <div class="info-item">
+                <label>Teléfono</label>
+                <p>@usuario.NumeroCelular</p>
+            </div>
+
+            <div class="info-item">
+                <label>Perfil</label>
+                <p>@usuario.Perfil</p>
+            </div>
+
+            <div class="info-item">
+                <label>ID</label>
+                <p>#@usuario.Id</p>
+            </div>
+
+        </div>
+
+        <!-- FOOTER -->
+        <div class="detail-actions">
+
+            <button class="btn btn-warning"
+                    @onclick="IrEditar">
+                ✏️ Editar
+            </button>
+
+            <button class="btn btn-secondary"
+                    @onclick="Volver">
+                ← Volver
+            </button>
+
+        </div>
+
+    </section>
+}
+
+
+@code {
+    [Parameter] public int id { get; set; }
+
+    private ClinicaBlazor.Models.Usuario usuario = new();
+    private bool cargando = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        usuario = await UsuarioService.ObtenerPorIdAsync(id);
+        cargando = false;
+    }
+
+    private void Volver()
+    {
+        Navigation.NavigateTo("/seguridad/usuarios");
+    }
+
+    private void IrEditar()
+    {
+        Navigation.NavigateTo($"/seguridad/usuarios/editar/{id}");
+    }
+}

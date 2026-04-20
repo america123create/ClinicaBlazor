@@ -1,6 +1,10 @@
 ﻿using ClinicaBlazor.Data;
 using ClinicaBlazor.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Net.NetworkInformation;
+using static ClinicaBlazor.Components.Pages.Seguridad.PermisosPerfil;
+
+
 
 namespace ClinicaBlazor.Services
 {
@@ -97,6 +101,27 @@ namespace ClinicaBlazor.Services
                     p.Modulo.Ruta == ruta);
 
             return permiso != null && permiso.Consultar;
+        }
+
+
+        public async Task<List<PermisoPerfil>> ObtenerPorPerfilAsync(int perfilId)
+        {
+            using var context = _dbFactory.CreateDbContext();
+
+            return await context.PermisosPerfil
+                .Where(p => p.PerfilId == perfilId)
+                .Select(p => new PermisoPerfil
+                {
+                    Id = p.Id,
+                    PerfilId = p.PerfilId,
+                    ModuloId = p.ModuloId,
+                    Modulo = p.Modulo,
+                    Agregar = p.Agregar,
+                    Editar = p.Editar,
+                    Consultar = p.Consultar,
+                    Eliminar = p.Eliminar,
+                    Detalle = p.Detalle
+                }).ToListAsync();
         }
     }
 }

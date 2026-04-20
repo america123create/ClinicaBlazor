@@ -1,0 +1,94 @@
+﻿@page "/seguridad/permisos/detalle/{id:int}"
+@rendermode InteractiveServer
+
+@using ClinicaBlazor.Models
+@using ClinicaBlazor.Services
+
+@inject PermisoPerfilService PermisoService
+@inject NavigationManager Navigation
+
+<PageTitle>Detalle del Permiso</PageTitle>
+
+@if (permiso == null)
+{
+    <div class="loading-box">
+        <p>Cargando permiso...</p>
+    </div>
+}
+else
+{
+    <div class="detail-container fade-in">
+
+        <div class="detail-header">
+            <h2>🔐 Detalle del Permiso</h2>
+            <button class="btn-back" @onclick="Volver">← Volver</button>
+        </div>
+
+        <div class="detail-card">
+
+            <div class="detail-item">
+                <span class="label">ID</span>
+                <span class="value">@permiso.Id</span>
+            </div>
+
+            <div class="detail-item">
+                <span class="label">Perfil</span>
+                <span class="value">@permiso.Perfil?.Nombre</span>
+            </div>
+
+            <div class="detail-item">
+                <span class="label">Módulo</span>
+                <span class="value">@permiso.Modulo?.Nombre</span>
+            </div>
+
+            <div class="detail-item">
+                <span class="label">Consultar</span>
+                <span class="value">@(permiso.Consultar ? "Sí" : "No")</span>
+            </div>
+
+            <div class="detail-item">
+                <span class="label">Agregar</span>
+                <span class="value">@(permiso.Agregar ? "Sí" : "No")</span>
+            </div>
+
+            <div class="detail-item">
+                <span class="label">Editar</span>
+                <span class="value">@(permiso.Editar ? "Sí" : "No")</span>
+            </div>
+
+            <div class="detail-item">
+                <span class="label">Eliminar</span>
+                <span class="value">@(permiso.Eliminar ? "Sí" : "No")</span>
+            </div>
+
+            <div class="detail-item">
+                <span class="label">Detalle</span>
+                <span class="value">@(permiso.Detalle ? "Sí" : "No")</span>
+            </div>
+
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int id { get; set; }
+
+    private PermisoPerfil? permiso;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var lista = await PermisoService.ObtenerTodosAsync();
+        permiso = lista.FirstOrDefault(x => x.Id == id);
+
+        if (permiso == null)
+        {
+            Navigation.NavigateTo("/seguridad/permisos");
+        }
+    }
+
+    private void Volver()
+    {
+        Navigation.NavigateTo("/seguridad/permisos");
+    }
+}
+

@@ -33,6 +33,9 @@ builder.Services.Configure<JwtSettings>(
 
 builder.Services.AddScoped<JwtService>();
 
+builder.Services.AddScoped<UsuarioService>();
+
+
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();

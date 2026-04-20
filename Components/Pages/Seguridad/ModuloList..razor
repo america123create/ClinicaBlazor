@@ -1,0 +1,321 @@
+﻿@page "/seguridad/modulos"
+@rendermode InteractiveServer
+@using ClinicaBlazor.Models
+@inject ModuloService ModuloService
+@inject NavigationManager Navigation
+
+<PageTitle>Módulos</PageTitle>
+
+<section class="header-premium">
+    <div>
+        <h1>Módulos</h1>
+        <p>Gestión del sistema</p>
+    </div>
+    <button class="btn-primary-custom"
+    @onclick="Nuevo">
+        + Nuevo
+    </button>
+</section>
+
+
+
+<style>
+    /* 🌸 FONDO GENERAL */
+    body {
+        background: linear-gradient(135deg, #fff0f6, #ffe6f0);
+    }
+
+    /* 🌸 HEADER PREMIUM */
+    .module-header-premium {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(135deg, #ff4da6, #ff80bf);
+        padding: 25px;
+        border-radius: 18px;
+        color: white;
+        margin-bottom: 20px;
+        box-shadow: 0 10px 30px rgba(255, 0, 128, 0.25);
+        animation: fadeIn 0.6s ease-in-out;
+    }
+
+        .module-header-premium h1 {
+            margin: 0;
+            font-size: 26px;
+            font-weight: bold;
+        }
+
+        .module-header-premium p {
+            margin: 0;
+            opacity: 0.9;
+        }
+
+    /* 🌸 BOTÓN NUEVO */
+    .btn-new {
+        background: white;
+        color: #ff4da6;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 12px;
+        font-weight: bold;
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+        .btn-new:hover {
+            background: #ffe6f0;
+            transform: scale(1.08);
+        }
+
+    /* 🌸 BUSCADOR */
+    .search-box input {
+        width: 100%;
+        padding: 12px 15px;
+        border-radius: 12px;
+        border: 2px solid #ffcce0;
+        margin-bottom: 18px;
+        outline: none;
+        transition: 0.3s;
+    }
+
+        .search-box input:focus {
+            border-color: #ff4da6;
+            box-shadow: 0 0 10px rgba(255, 0, 128, 0.2);
+        }
+
+    /* 🌸 CARD TABLA */
+    .table-card {
+        background: white;
+        padding: 20px;
+        border-radius: 18px;
+        box-shadow: 0 15px 40px rgba(255, 0, 128, 0.15);
+        animation: fadeIn 0.7s ease-in-out;
+    }
+
+    /* 🌸 TABLA */
+    .table-premium {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .table-premium th {
+            text-align: left;
+            padding: 14px;
+            background: #fff0f6;
+            font-weight: bold;
+            color: #444;
+        }
+
+        .table-premium td {
+            padding: 14px;
+            border-bottom: 1px solid #f3f3f3;
+        }
+
+    /* 🌸 HOVER FILAS */
+    .row-hover {
+        transition: 0.3s;
+    }
+
+        .row-hover:hover {
+            background: #fff5fa;
+            transform: scale(1.01);
+        }
+
+    /* 🌸 ACCIONES */
+    .actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    /* 🌸 BOTONES ICONO */
+    .btn-new {
+        background: linear-gradient(135deg, #ff4da6, #ff1a8c);
+        color: white;
+        border: none;
+        padding: 12px 22px;
+        border-radius: 12px;
+        font-weight: bold;
+        font-size: 15px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        box-shadow: 0 8px 20px rgba(255, 0, 128, 0.3);
+        transition: all 0.3s ease;
+    }
+
+        /* 🔥 HOVER */
+        .btn-new:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 12px 25px rgba(255, 0, 128, 0.4);
+        }
+
+        /* 🔥 CLICK */
+        .btn-new:active {
+            transform: scale(0.95);
+        }
+
+        /* ✨ ICONO */
+        .btn-new::before {
+            content: "+";
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+    /* 🎨 COLORES */
+    .detail {
+        background: #00c2ff;
+        color: white;
+    }
+
+    .edit {
+        background: #ffc107;
+        color: black;
+    }
+
+    .delete {
+        background: #ff4d6d;
+        color: white;
+    }
+
+    /* ✨ EFECTO HOVER BOTONES */
+    .btn-icon:hover {
+        transform: scale(1.2) rotate(5deg);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    /* 🌸 PAGINACIÓN */
+    .pagination-box {
+        margin-top: 20px;
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+    }
+
+        .pagination-box button {
+            border: none;
+            background: #ff4da6;
+            color: white;
+            padding: 10px 14px;
+            border-radius: 10px;
+            transition: 0.3s;
+        }
+
+            .pagination-box button:hover {
+                background: #ff1a8c;
+                transform: scale(1.1);
+            }
+
+    /* 🌸 ANIMACIÓN */
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(15px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+</style>
+
+<div class="search-box">
+    <input placeholder="Buscar módulo..."
+           @bind="filtro"
+           @bind:event="oninput" />
+</div>
+
+<section class="card-table">
+    <table class="table-premium">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Nombre</th>
+                <th>Clave</th>
+                <th>Ruta</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var m in modulosFiltrados)
+            {
+                <tr>
+                    <td>@m.Id</td>
+                    <td>@m.Nombre</td>
+                    <td>@m.Clave</td>
+                    <td>@m.Ruta</td>
+
+                    <td>
+                        <div class="actions">
+                            <button class="btn-icon detail"
+                                    @onclick="() => Ver(m.Id)">👁</button>
+
+                            <button class="btn-icon edit"
+                                    @onclick="() => Editar(m.Id)">✏</button>
+
+                            <button class="btn-icon delete"
+                                    @onclick="() => Eliminar(m.Id)">🗑</button>
+
+                        </div>
+                    </td>
+                </tr>
+            }
+
+
+        </tbody>
+        <div class="pagination-pro">
+            <button @onclick="Anterior" disabled="@(paginaActual == 1)">«</button>
+
+            <span>Página @paginaActual de @totalPaginas</span>
+
+            <button @onclick="Siguiente" disabled="@(paginaActual == totalPaginas)">»</button>
+        </div>
+    </table>
+</section>
+
+@code {
+    private List<Modulo> modulos = new();
+    private string filtro = "";
+    private int paginaActual = 1;
+    private int registrosPorPagina = 5;
+
+    private int totalPaginas =>
+        (int)Math.Ceiling((double)modulos.Count / registrosPorPagina);
+
+    protected override async Task OnInitializedAsync()
+    {
+        modulos = await ModuloService.ObtenerTodosAsync();
+    }
+
+    private List<Modulo> modulosFiltrados =>
+        modulos.Where(m =>
+            string.IsNullOrWhiteSpace(filtro) ||
+            m.Nombre.Contains(filtro, StringComparison.OrdinalIgnoreCase) ||
+            m.Clave.Contains(filtro, StringComparison.OrdinalIgnoreCase)
+        ).ToList();
+
+    private void Nuevo() => Navigation.NavigateTo("/seguridad/modulos/nuevo");
+    private void Editar(int id) => Navigation.NavigateTo($"/seguridad/modulos/editar/{id}");
+    private void Ver(int id) => Navigation.NavigateTo($"/seguridad/modulos/detalle/{id}");
+
+    private async Task Eliminar(int id)
+    {
+        await ModuloService.EliminarAsync(id);
+        modulos = await ModuloService.ObtenerTodosAsync();
+    }
+
+    void Anterior()
+    {
+        if (paginaActual > 1)
+            paginaActual--;
+    }
+
+    void Siguiente()
+    {
+        if (paginaActual < totalPaginas)
+            paginaActual++;
+    }
+}

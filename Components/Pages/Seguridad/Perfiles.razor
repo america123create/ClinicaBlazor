@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 @using Microsoft.AspNetCore.Components.Forms
 @using ClinicaBlazor.Services
+@using ClinicaBlazor.Models
 @inject PerfilService PerfilService
 @inject PermisoPerfilService PermisoPerfilService
 @inject SesionService SesionService
@@ -87,7 +88,7 @@ else
     }
 
     <section class="module-table-card">
-        <table class="module-table">
+        <table class="table-pink">
             <thead>
                 <tr>
                     <th>Nombre</th>

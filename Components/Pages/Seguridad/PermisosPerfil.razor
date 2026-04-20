@@ -1,7 +1,6 @@
 ﻿@page "/seguridad/permisos-perfil"
 @rendermode InteractiveServer
-@using Microsoft.AspNetCore.Components.Forms
-@using ClinicaBlazor.Services
+@using ClinicaBlazor.Models
 @inject PermisoPerfilService PermisoPerfilService
 @inject PerfilService PerfilService
 @inject ModuloService ModuloService
@@ -20,202 +19,116 @@ else if (!haySesion)
 }
 else
 {
-    <Breadcrumbs Items="breadcrumbItems" />
-
-    <section class="module-header">
-        <h1>Permisos por Perfil</h1>
-        <p>Gestión de permisos asignados a cada perfil</p>
+    <section class="header-premium">
+        <h1>🔐 Gestión de Permisos</h1>
+        <p>Administra accesos por perfil</p>
     </section>
 
+    <!-- FILTRO -->
     <section class="form-card">
-        <EditForm Model="nuevoPermiso" OnValidSubmit="GuardarPermiso">
-            <DataAnnotationsValidator />
-            <ValidationSummary />
+        <div class="form-group">
+            <label>Filtrar por perfil</label>
 
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Perfil</label>
-                    <InputSelect @bind-Value="nuevoPermiso.PerfilId" class="form-control">
-                        <option value="0">Seleccione un perfil</option>
-                        @foreach (var perfil in perfilesDisponibles)
-                        {
-                            <option value="@perfil.Id">@perfil.Nombre</option>
-                        }
-                    </InputSelect>
-                </div>
+            <div style="display:flex; gap:10px;">
+                <select class="form-control"
+                        style="max-width:350px;"
+                        @onchange="OnPerfilChange">
+                    <option value="0">— Todos los perfiles —</option>
 
-                <div class="form-group">
-                    <label>Módulo</label>
-                    <InputSelect @bind-Value="nuevoPermiso.ModuloId" class="form-control">
-                        <option value="0">Seleccione un módulo</option>
-                        @foreach (var modulo in modulosDisponibles)
-                        {
-                            <option value="@modulo.Id">@modulo.Nombre</option>
-                        }
-                    </InputSelect>
-                </div>
-
-                <div class="form-group full-width">
-                    <label>Permisos</label>
-
-                    <div class="permissions-grid">
-                        <label class="permission-check">
-                            <InputCheckbox @bind-Value="nuevoPermiso.Agregar" />
-                            Agregar
-                        </label>
-
-                        <label class="permission-check">
-                            <InputCheckbox @bind-Value="nuevoPermiso.Editar" />
-                            Editar
-                        </label>
-
-                        <label class="permission-check">
-                            <InputCheckbox @bind-Value="nuevoPermiso.Consultar" />
-                            Consultar
-                        </label>
-
-                        <label class="permission-check">
-                            <InputCheckbox @bind-Value="nuevoPermiso.Eliminar" />
-                            Eliminar
-                        </label>
-
-                        <label class="permission-check">
-                            <InputCheckbox @bind-Value="nuevoPermiso.Detalle" />
-                            Detalle
-                        </label>
-                    </div>
-                </div>
-
-                <div class="form-actions full-width">
-                    @if ((nuevoPermiso.Id == 0 && puedeAgregar) || (nuevoPermiso.Id != 0 && puedeEditar))
+                    @foreach (var p in perfilesDisponibles)
                     {
-                        <button type="submit" class="btn btn-primary module-add-btn">
-                            @(nuevoPermiso.Id == 0 ? "Guardar permiso" : "Actualizar permiso")
-                        </button>
+                        <option value="@p.Id">@p.Nombre</option>
                     }
+                </select>
 
-                    @if (nuevoPermiso.Id != 0)
-                    {
-                        <button type="button" class="btn btn-secondary" @onclick="CancelarEdicion">
-                            Cancelar
-                        </button>
-                    }
-                </div>
+                <button class="btn btn-secondary" @onclick="LimpiarFiltro">
+                    ✖
+                </button>
             </div>
-        </EditForm>
+        </div>
     </section>
 
+    <!-- MENSAJE -->
     @if (!string.IsNullOrEmpty(mensaje))
     {
-        <div class="alert alert-success">@mensaje</div>
+        <div class="toast-success">@mensaje</div>
     }
 
-    @if (mostrarDetalle && permisoDetalle != null)
-    {
-        <section class="detail-card">
-            <h3>Detalle del permiso</h3>
-
-            <div class="detail-info">
-                <p><strong>ID:</strong> @permisoDetalle.Id</p>
-                <p><strong>Perfil:</strong> @permisoDetalle.Perfil?.Nombre</p>
-                <p><strong>Módulo:</strong> @permisoDetalle.Modulo?.Nombre</p>
-                <p><strong>Agregar:</strong> @(permisoDetalle.Agregar ? "Sí" : "No")</p>
-                <p><strong>Editar:</strong> @(permisoDetalle.Editar ? "Sí" : "No")</p>
-                <p><strong>Consultar:</strong> @(permisoDetalle.Consultar ? "Sí" : "No")</p>
-                <p><strong>Eliminar:</strong> @(permisoDetalle.Eliminar ? "Sí" : "No")</p>
-                <p><strong>Detalle:</strong> @(permisoDetalle.Detalle ? "Sí" : "No")</p>
-            </div>
-
-            <button class="btn btn-secondary" @onclick="CerrarDetalle">
-                Cerrar detalle
-            </button>
-        </section>
-    }
-
+    <!-- TABLA -->
     <section class="module-table-card">
         <table class="module-table">
             <thead>
                 <tr>
-                    <th>Perfil</th>
+                    <th>#</th>
                     <th>Módulo</th>
                     <th>Agregar</th>
                     <th>Editar</th>
-                    <th>Consultar</th>
+                    <th>Consulta</th>
                     <th>Eliminar</th>
                     <th>Detalle</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
+
             <tbody>
-                @foreach (var permiso in permisosPaginados)
+                @if (!permisosPaginados.Any())
                 {
                     <tr>
-                        <td>@permiso.Perfil?.Nombre</td>
-                        <td>@permiso.Modulo?.Nombre</td>
-                        <td>
-                            <span class="status-pill @(permiso.Agregar ? "active" : "inactive")">
-                                • @(permiso.Agregar ? "Sí" : "No")
-                            </span>
-                        </td>
-                        <td>
-                            <span class="status-pill @(permiso.Editar ? "active" : "inactive")">
-                                • @(permiso.Editar ? "Sí" : "No")
-                            </span>
-                        </td>
-                        <td>
-                            <span class="status-pill @(permiso.Consultar ? "active" : "inactive")">
-                                • @(permiso.Consultar ? "Sí" : "No")
-                            </span>
-                        </td>
-                        <td>
-                            <span class="status-pill @(permiso.Eliminar ? "active" : "inactive")">
-                                • @(permiso.Eliminar ? "Sí" : "No")
-                            </span>
-                        </td>
-                        <td>
-                            <span class="status-pill @(permiso.Detalle ? "active" : "inactive")">
-                                • @(permiso.Detalle ? "Sí" : "No")
-                            </span>
-                        </td>
-                        <td>
-                            <div class="action-group">
-                                @if (puedeDetalle)
-                                {
-                                    <button class="btn-action detail" @onclick="() => VerDetalle(permiso)">
-                                        Detalle
-                                    </button>
-                                }
-
-                                @if (puedeEditar)
-                                {
-                                    <button class="btn-action edit" @onclick="() => EditarPermiso(permiso)">
-                                        Editar
-                                    </button>
-                                }
-
-                                @if (puedeEliminar)
-                                {
-                                    <button class="btn-action delete" @onclick="() => EliminarPermiso(permiso.Id)">
-                                        Eliminar
-                                    </button>
-                                }
-                            </div>
+                        <td colspan="8" style="text-align:center; padding:40px;">
+                            ☝ Selecciona un perfil
                         </td>
                     </tr>
+                }
+                else
+                {
+                    @foreach (var permiso in permisosPaginados)
+                    {
+                        <tr>
+                            <td>@permiso.Id</td>
+                            <td>@permiso.Modulo?.Nombre</td>
+
+                            <td>@Switch(permiso, nameof(permiso.Agregar), permiso.Agregar)</td>
+                            <td>@Switch(permiso, nameof(permiso.Editar), permiso.Editar)</td>
+                            <td>@Switch(permiso, nameof(permiso.Consultar), permiso.Consultar)</td>
+                            <td>@Switch(permiso, nameof(permiso.Eliminar), permiso.Eliminar)</td>
+                            <td>@Switch(permiso, nameof(permiso.Detalle), permiso.Detalle)</td>
+
+                            <td>
+                                <div class="action-group">
+
+                                    <button class="btn btn-info btn-sm"
+                                            @onclick="() => VerDetalle(permiso.Id)">
+                                        Detalle
+                                    </button>
+
+                                    <button class="btn-action delete"
+                                            @onclick="() => EliminarPermiso(permiso.Id)">
+                                        🗑
+                                    </button>
+
+                                </div>
+                            </td>
+                        </tr>
+                    }
                 }
             </tbody>
         </table>
     </section>
 
+    <!-- PAGINACIÓN -->
     <section class="module-footer-card">
         <span>Página @paginaActual de @TotalPaginas</span>
 
         <div class="action-group">
-            <button class="btn btn-secondary" @onclick="PaginaAnterior" disabled="@(paginaActual == 1)">
+            <button class="btn btn-secondary"
+                    @onclick="PaginaAnterior"
+                    disabled="@(paginaActual == 1)">
                 &lt;
             </button>
 
-            <button class="btn btn-secondary" @onclick="PaginaSiguiente" disabled="@(paginaActual == TotalPaginas)">
+            <button class="btn btn-secondary"
+                    @onclick="PaginaSiguiente"
+                    disabled="@(paginaActual == TotalPaginas)">
                 &gt;
             </button>
         </div>
@@ -227,35 +140,12 @@ else
     private bool haySesion;
     private string? mensaje;
 
-    private bool puedeAgregar;
-    private bool puedeEditar;
-    private bool puedeEliminar;
-    private bool puedeConsultar;
-    private bool puedeDetalle;
-
-    private bool mostrarDetalle;
-    private ClinicaBlazor.Models.PermisoPerfil? permisoDetalle;
-
     private int paginaActual = 1;
     private int filasPorPagina = 5;
+    private int perfilSeleccionadoId = 0;
 
-    private ClinicaBlazor.Models.PermisoPerfil nuevoPermiso = new();
-    private List<ClinicaBlazor.Models.PermisoPerfil> permisos = new();
-    private List<ClinicaBlazor.Models.Perfil> perfilesDisponibles = new();
-    private List<ClinicaBlazor.Models.Modulo> modulosDisponibles = new();
-
-    private List<BreadcrumbItem> breadcrumbItems = new()
-    {
-        new BreadcrumbItem { Texto = "Inicio", Url = "/dashboard" },
-        new BreadcrumbItem { Texto = "Seguridad" },
-        new BreadcrumbItem { Texto = "Permisos Perfil" }
-    };
-
-    private int TotalPaginas =>
-        permisos.Count == 0 ? 1 : (int)Math.Ceiling((double)permisos.Count / filasPorPagina);
-
-    private List<ClinicaBlazor.Models.PermisoPerfil> permisosPaginados =>
-        permisos.Skip((paginaActual - 1) * filasPorPagina).Take(filasPorPagina).ToList();
+    private List<PermisoPerfil> permisos = new();
+    private List<Perfil> perfilesDisponibles = new();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -265,184 +155,99 @@ else
 
         if (!haySesion)
         {
-            cargado = true;
-            StateHasChanged();
             Navigation.NavigateTo("/login", true);
             return;
         }
 
-        var perfilNombre = await SesionService.ObtenerPerfilAsync();
+        perfilesDisponibles = await PerfilService.ObtenerTodosAsync();
+        permisos = await PermisoPerfilService.ObtenerTodosAsync();
 
-        if (!string.IsNullOrWhiteSpace(perfilNombre))
-        {
-            var perfilSesion = await PerfilService.ObtenerPorNombreAsync(perfilNombre);
-
-            if (perfilSesion != null)
-            {
-                var permiso = await PermisoPerfilService.ObtenerPermisoPorPerfilYRutaAsync(perfilSesion.Id, "/seguridad/permisos-perfil");
-
-                if (permiso != null)
-                {
-                    puedeAgregar = permiso.Agregar;
-                    puedeEditar = permiso.Editar;
-                    puedeEliminar = permiso.Eliminar;
-                    puedeConsultar = permiso.Consultar;
-                    puedeDetalle = permiso.Detalle;
-                }
-            }
-        }
-
-        if (!puedeConsultar)
-        {
-            cargado = true;
-            StateHasChanged();
-            Navigation.NavigateTo("/dashboard", true);
-            return;
-        }
-
-        await CargarCatalogos();
-        await CargarPermisos();
         cargado = true;
         StateHasChanged();
     }
 
-    private async Task CargarCatalogos()
-    {
-        perfilesDisponibles = await PerfilService.ObtenerTodosAsync();
-        modulosDisponibles = await ModuloService.ObtenerTodosAsync();
-    }
+    private List<PermisoPerfil> permisosFiltrados =>
+        perfilSeleccionadoId == 0
+            ? new()
+            : permisos.Where(p => p.PerfilId == perfilSeleccionadoId).ToList();
 
-    private async Task CargarPermisos()
-    {
-        permisos = await PermisoPerfilService.ObtenerTodosAsync();
-    }
+    private List<PermisoPerfil> permisosPaginados =>
+        permisosFiltrados
+            .Skip((paginaActual - 1) * filasPorPagina)
+            .Take(filasPorPagina)
+            .ToList();
 
-    private async Task GuardarPermiso()
-    {
-        mensaje = null;
+    private int TotalPaginas =>
+        permisosFiltrados.Count == 0 ? 1 :
+        (int)Math.Ceiling((double)permisosFiltrados.Count / filasPorPagina);
 
-        if (nuevoPermiso.Id == 0 && !puedeAgregar)
+    private void OnPerfilChange(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int id))
         {
-            mensaje = "No tienes permiso para agregar.";
-            return;
+            perfilSeleccionadoId = id;
+            paginaActual = 1;
+        }
+    }
+
+    private void LimpiarFiltro()
+    {
+        perfilSeleccionadoId = 0;
+        paginaActual = 1;
+    }
+
+    private async Task TogglePermiso(PermisoPerfil permiso, string campo, bool valor)
+    {
+        switch (campo)
+        {
+            case nameof(permiso.Agregar): permiso.Agregar = valor; break;
+            case nameof(permiso.Editar): permiso.Editar = valor; break;
+            case nameof(permiso.Consultar): permiso.Consultar = valor; break;
+            case nameof(permiso.Eliminar): permiso.Eliminar = valor; break;
+            case nameof(permiso.Detalle): permiso.Detalle = valor; break;
         }
 
-        if (nuevoPermiso.Id != 0 && !puedeEditar)
-        {
-            mensaje = "No tienes permiso para editar.";
-            return;
-        }
-
-        await PermisoPerfilService.GuardarAsync(nuevoPermiso);
-
-        mensaje = nuevoPermiso.Id == 0
-            ? "Permiso guardado correctamente."
-            : "Permiso actualizado correctamente.";
-
-        nuevoPermiso = new ClinicaBlazor.Models.PermisoPerfil();
-        await CargarPermisos();
-        ReiniciarPaginacionSiHaceFalta();
+        await PermisoPerfilService.GuardarAsync(permiso);
+        mensaje = "✔ Actualizado";
     }
 
-    private void EditarPermiso(ClinicaBlazor.Models.PermisoPerfil permiso)
+    private RenderFragment Switch(PermisoPerfil permiso, string campo, bool valor) => builder =>
     {
-        mensaje = null;
-        mostrarDetalle = false;
-        permisoDetalle = null;
+        builder.OpenElement(0, "label");
+        builder.AddAttribute(1, "class", "switch");
 
-        nuevoPermiso = new ClinicaBlazor.Models.PermisoPerfil
-        {
-            Id = permiso.Id,
-            PerfilId = permiso.PerfilId,
-            ModuloId = permiso.ModuloId,
-            Agregar = permiso.Agregar,
-            Editar = permiso.Editar,
-            Consultar = permiso.Consultar,
-            Eliminar = permiso.Eliminar,
-            Detalle = permiso.Detalle
-        };
-    }
+        builder.OpenElement(2, "input");
+        builder.AddAttribute(3, "type", "checkbox");
+        builder.AddAttribute(4, "checked", valor);
+        builder.AddAttribute(5, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this,
+            e => TogglePermiso(permiso, campo, (bool)e.Value)));
+        builder.CloseElement();
 
-    private void CancelarEdicion()
+        builder.OpenElement(6, "span");
+        builder.AddAttribute(7, "class", "slider");
+        builder.CloseElement();
+
+        builder.CloseElement();
+    };
+
+    private void VerDetalle(int id)
     {
-        mensaje = null;
-        nuevoPermiso = new ClinicaBlazor.Models.PermisoPerfil();
+        Navigation.NavigateTo($"/seguridad/permisos/detalle/{id}");
     }
 
     private async Task EliminarPermiso(int id)
     {
-        mensaje = null;
-
-        if (!puedeEliminar)
-        {
-            mensaje = "No tienes permiso para eliminar.";
-            return;
-        }
-
         await PermisoPerfilService.EliminarAsync(id);
-        mensaje = "Permiso eliminado correctamente.";
-
-        if (nuevoPermiso.Id == id)
-            nuevoPermiso = new ClinicaBlazor.Models.PermisoPerfil();
-
-        if (permisoDetalle?.Id == id)
-        {
-            permisoDetalle = null;
-            mostrarDetalle = false;
-        }
-
-        await CargarPermisos();
-        ReiniciarPaginacionSiHaceFalta();
-    }
-
-    private void VerDetalle(ClinicaBlazor.Models.PermisoPerfil permiso)
-    {
-        mensaje = null;
-
-        if (!puedeDetalle)
-        {
-            mensaje = "No tienes permiso para ver detalle.";
-            return;
-        }
-
-        permisoDetalle = new ClinicaBlazor.Models.PermisoPerfil
-        {
-            Id = permiso.Id,
-            PerfilId = permiso.PerfilId,
-            ModuloId = permiso.ModuloId,
-            Agregar = permiso.Agregar,
-            Editar = permiso.Editar,
-            Consultar = permiso.Consultar,
-            Eliminar = permiso.Eliminar,
-            Detalle = permiso.Detalle,
-            Perfil = permiso.Perfil,
-            Modulo = permiso.Modulo
-        };
-
-        mostrarDetalle = true;
-    }
-
-    private void CerrarDetalle()
-    {
-        mostrarDetalle = false;
-        permisoDetalle = null;
+        permisos = await PermisoPerfilService.ObtenerTodosAsync();
     }
 
     private void PaginaAnterior()
     {
-        if (paginaActual > 1)
-            paginaActual--;
+        if (paginaActual > 1) paginaActual--;
     }
 
     private void PaginaSiguiente()
     {
-        if (paginaActual < TotalPaginas)
-            paginaActual++;
-    }
-
-    private void ReiniciarPaginacionSiHaceFalta()
-    {
-        if (paginaActual > TotalPaginas)
-            paginaActual = TotalPaginas;
+        if (paginaActual < TotalPaginas) paginaActual++;
     }
 }

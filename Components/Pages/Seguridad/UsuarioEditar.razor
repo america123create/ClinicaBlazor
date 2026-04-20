@@ -1,0 +1,194 @@
+﻿@page "/seguridad/usuarios/editar/{id:int}"
+@rendermode InteractiveServer
+
+@using Microsoft.AspNetCore.Components.Forms
+@using ClinicaBlazor.Models
+@using ClinicaBlazor.Services
+@using Microsoft.AspNetCore.Hosting
+@using System.IO
+
+@inject UsuarioService UsuarioService
+@inject PerfilService PerfilService
+@inject NavigationManager Navigation
+@inject IWebHostEnvironment Env
+
+<PageTitle>Editar Usuario</PageTitle>
+
+<section class="module-header">
+    <h1>Editar Usuario</h1>
+    <p>Modifica la información del usuario</p>
+</section>
+
+@if (cargando)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <section class="form-card">
+
+        <EditForm Model="usuario" OnValidSubmit="ActualizarUsuario">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-grid">
+
+                <!-- NOMBRE -->
+                <div class="form-group">
+                    <label>Nombre</label>
+                    <InputText @bind-Value="usuario.Nombre" class="form-control" />
+                </div>
+
+                <!-- CORREO -->
+                <div class="form-group">
+                    <label>Correo</label>
+                    <InputText @bind-Value="usuario.Correo" class="form-control" />
+                </div>
+
+                <!-- USERNAME -->
+                <div class="form-group">
+                    <label>Nombre de usuario</label>
+                    <InputText @bind-Value="usuario.Username" class="form-control" />
+                </div>
+
+                <!-- PASSWORD -->
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <InputText @bind-Value="usuario.Password" type="password" class="form-control" />
+                </div>
+
+                <!-- CELULAR -->
+                <div class="form-group">
+                    <label>Número celular</label>
+                    <InputText @bind-Value="usuario.NumeroCelular" class="form-control" maxlength="10" />
+                </div>
+
+                <!-- PERFIL -->
+                <div class="form-group">
+                    <label>Perfil</label>
+                    <InputSelect @bind-Value="usuario.Perfil" class="form-control">
+                        <option value="">Seleccione un perfil</option>
+                        @foreach (var p in perfiles)
+                        {
+                            <option value="@p.Nombre">@p.Nombre</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <!-- ACTIVO -->
+                <div class="form-group checkbox-group">
+                    <label>
+                        <InputCheckbox @bind-Value="usuario.Activo" />
+                        Activo
+                    </label>
+                </div>
+
+                <!-- IMAGEN -->
+                <div class="form-group full-width">
+                    <label>Imagen del usuario</label>
+                    <InputFile OnChange="SeleccionarImagen" accept="image/*" class="form-control" />
+                </div>
+
+                <!-- PREVIEW -->
+                @if (!string.IsNullOrWhiteSpace(previewImagen))
+                {
+                    <div class="form-group full-width">
+                        <label>Vista previa</label>
+                        <div class="preview-box">
+                            <img src="@previewImagen" class="user-preview-image" />
+                        </div>
+                    </div>
+                }
+
+                <!-- BOTONES -->
+                <div class="form-actions full-width">
+                    <button type="submit" class="btn btn-primary module-add-btn">
+                        Actualizar usuario
+                    </button>
+
+                    <button type="button" class="btn btn-secondary" @onclick="Volver">
+                        Cancelar
+                    </button>
+                </div>
+
+            </div>
+        </EditForm>
+
+    </section>
+}
+
+@code {
+    [Parameter] public int id { get; set; }
+
+    private ClinicaBlazor.Models.Usuario usuario = new();
+    private List<Perfil> perfiles = new();
+
+    private bool cargando = true;
+
+    private IBrowserFile? archivoImagen;
+    private string? previewImagen;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var data = await UsuarioService.ObtenerPorIdAsync(id);
+
+        if (data != null)
+        {
+            usuario = data;
+            previewImagen = usuario.Imagen;
+        }
+
+        perfiles = await PerfilService.ObtenerTodosAsync();
+
+        cargando = false;
+    }
+
+    private async Task SeleccionarImagen(InputFileChangeEventArgs e)
+    {
+        archivoImagen = e.File;
+
+        if (archivoImagen != null)
+        {
+            using var stream = archivoImagen.OpenReadStream(5 * 1024 * 1024);
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            var base64 = Convert.ToBase64String(ms.ToArray());
+
+            previewImagen = $"data:{archivoImagen.ContentType};base64,{base64}";
+        }
+    }
+
+    private async Task<string?> GuardarImagenAsync()
+    {
+        if (archivoImagen == null)
+            return usuario.Imagen;
+
+        var extension = Path.GetExtension(archivoImagen.Name);
+        var nombreArchivo = $"{Guid.NewGuid()}{extension}";
+        var ruta = Path.Combine(Env.WebRootPath, "uploads/usuarios");
+
+        if (!Directory.Exists(ruta))
+            Directory.CreateDirectory(ruta);
+
+        var rutaCompleta = Path.Combine(ruta, nombreArchivo);
+
+        using var fs = new FileStream(rutaCompleta, FileMode.Create);
+        await archivoImagen.OpenReadStream().CopyToAsync(fs);
+
+        return $"/uploads/usuarios/{nombreArchivo}";
+    }
+
+    private async Task ActualizarUsuario()
+    {
+        usuario.Imagen = await GuardarImagenAsync();
+
+        await UsuarioService.GuardarAsync(usuario);
+
+        Navigation.NavigateTo("/seguridad/usuarios");
+    }
+
+    private void Volver()
+    {
+        Navigation.NavigateTo("/seguridad/usuarios");
+    }
+}

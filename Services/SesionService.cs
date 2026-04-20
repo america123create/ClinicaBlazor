@@ -29,6 +29,7 @@ namespace ClinicaBlazor.Services
             return resultado.Success ? resultado.Value : null;
         }
 
+
         public async Task CerrarSesionAsync()
         {
             await _sessionStorage.DeleteAsync("usuario_id");
