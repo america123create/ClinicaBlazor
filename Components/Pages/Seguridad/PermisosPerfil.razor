@@ -240,7 +240,7 @@ else
         await PermisoPerfilService.EliminarAsync(id);
         permisos = await PermisoPerfilService.ObtenerTodosAsync();
     }
-
+   
     private void PaginaAnterior()
     {
         if (paginaActual > 1) paginaActual--;
@@ -249,5 +249,10 @@ else
     private void PaginaSiguiente()
     {
         if (paginaActual < TotalPaginas) paginaActual++;
+    }
+
+    private void Volver()
+    {
+        Navigation.NavigateTo("/seguridad/permisos-perfil", forceLoad: true);
     }
 }

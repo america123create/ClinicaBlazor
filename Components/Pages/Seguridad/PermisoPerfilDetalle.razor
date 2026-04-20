@@ -85,10 +85,9 @@ else
             Navigation.NavigateTo("/seguridad/permisos");
         }
     }
-
     private void Volver()
     {
-        Navigation.NavigateTo("/seguridad/permisos");
+        Navigation.NavigateTo("/seguridad/permisos-perfil", forceLoad: true);
     }
 }
 
