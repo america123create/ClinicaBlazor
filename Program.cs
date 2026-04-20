@@ -22,7 +22,6 @@ builder.Services.AddScoped<UsuarioService>();
 builder.Services.AddScoped<ModuloService>();
 builder.Services.AddScoped<PermisoPerfilService>();
 builder.Services.AddScoped<PerfilService>();
-builder.Services.AddScoped<PermisoPerfilService>();
 builder.Services.Configure<ReCaptchaSettings>(
     builder.Configuration.GetSection("ReCaptcha"));
 
