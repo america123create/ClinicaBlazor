@@ -27,49 +27,61 @@ else
         <p>Gestión de perfiles del sistema</p>
     </section>
 
-    <section class="form-card">
-        <EditForm Model="nuevoPerfil" OnValidSubmit="GuardarPerfil">
-            <DataAnnotationsValidator />
-            <ValidationSummary />
+    <!-- BOTÓN + NUEVO -->
+    <div class="actions-bar">
+        @if (puedeAgregar)
+        {
+            <button class="btn btn-primary" @onclick="MostrarFormulario">
+                + Nuevo perfil
+            </button>
+        }
+    </div>
 
-            <div class="form-grid perfiles-grid">
-                <div class="form-group">
-                    <label>Nombre del perfil</label>
-                    <InputText @bind-Value="nuevoPerfil.Nombre" class="form-control" />
-                </div>
+    <!-- FORMULARIO (SOLO SE MUESTRA SI ESTA ACTIVO) -->
+    @if (mostrarFormulario)
+    {
+        <section class="form-card">
+            <EditForm Model="nuevoPerfil" OnValidSubmit="GuardarPerfil">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
 
-                <div class="form-group checkbox-group">
-                    <label>Configuración</label>
-                    <label class="checkbox-inline">
-                        <InputCheckbox @bind-Value="nuevoPerfil.Administrador" />
-                        Es administrador
-                    </label>
-                </div>
+                <div class="form-grid perfiles-grid">
+                    <div class="form-group">
+                        <label>Nombre del perfil</label>
+                        <InputText @bind-Value="nuevoPerfil.Nombre" class="form-control" />
+                    </div>
 
-                <div class="form-actions full-width">
-                    @if ((nuevoPerfil.Id == 0 && puedeAgregar) || (nuevoPerfil.Id != 0 && puedeEditar))
-                    {
-                        <button type="submit" class="btn btn-primary module-add-btn">
-                            @(nuevoPerfil.Id == 0 ? "Guardar perfil" : "Actualizar perfil")
-                        </button>
-                    }
+                    <div class="form-group checkbox-group">
+                        <label>Configuración</label>
+                        <label class="checkbox-inline">
+                            <InputCheckbox @bind-Value="nuevoPerfil.Administrador" />
+                            Es administrador
+                        </label>
+                    </div>
 
-                    @if (nuevoPerfil.Id != 0)
-                    {
+                    <div class="form-actions full-width">
+                        @if ((nuevoPerfil.Id == 0 && puedeAgregar) || (nuevoPerfil.Id != 0 && puedeEditar))
+                        {
+                            <button type="submit" class="btn btn-primary module-add-btn">
+                                @(nuevoPerfil.Id == 0 ? "Guardar perfil" : "Actualizar perfil")
+                            </button>
+                        }
+
                         <button type="button" class="btn btn-secondary" @onclick="CancelarEdicion">
                             Cancelar
                         </button>
-                    }
+                    </div>
                 </div>
-            </div>
-        </EditForm>
-    </section>
+            </EditForm>
+        </section>
+    }
 
     @if (!string.IsNullOrEmpty(mensaje))
     {
         <div class="alert alert-success">@mensaje</div>
     }
 
+    <!-- DETALLE -->
     @if (mostrarDetalle && perfilDetalle != null)
     {
         <section class="detail-card">
@@ -87,6 +99,7 @@ else
         </section>
     }
 
+    <!-- TABLA -->
     <section class="module-table-card">
         <table class="table-pink">
             <thead>
@@ -96,6 +109,7 @@ else
                     <th>Acciones</th>
                 </tr>
             </thead>
+
             <tbody>
                 @foreach (var perfil in perfilesPaginados)
                 {
@@ -108,6 +122,7 @@ else
                         </td>
                         <td>
                             <div class="action-group">
+
                                 @if (puedeDetalle)
                                 {
                                     <button class="btn-action detail" @onclick="() => VerDetalle(perfil)">
@@ -128,6 +143,7 @@ else
                                         Eliminar
                                     </button>
                                 }
+
                             </div>
                         </td>
                     </tr>
@@ -136,6 +152,7 @@ else
         </table>
     </section>
 
+    <!-- PAGINACIÓN -->
     <section class="module-footer-card">
         <span>Página @paginaActual de @TotalPaginas</span>
 
@@ -162,7 +179,9 @@ else
     private bool puedeConsultar;
     private bool puedeDetalle;
 
+    private bool mostrarFormulario = false;
     private bool mostrarDetalle;
+
     private ClinicaBlazor.Models.Perfil? perfilDetalle;
 
     private int paginaActual = 1;
@@ -206,7 +225,8 @@ else
 
             if (perfilSesion != null)
             {
-                var permiso = await PermisoPerfilService.ObtenerPermisoPorPerfilYRutaAsync(perfilSesion.Id, "/seguridad/perfil");
+                var permiso = await PermisoPerfilService
+                    .ObtenerPermisoPorPerfilYRutaAsync(perfilSesion.Id, "/seguridad/perfil");
 
                 if (permiso != null)
                 {
@@ -260,15 +280,31 @@ else
             : "Perfil actualizado correctamente.";
 
         nuevoPerfil = new ClinicaBlazor.Models.Perfil();
+
+        mostrarFormulario = false;
+
         await CargarPerfiles();
         ReiniciarPaginacionSiHaceFalta();
+    }
+
+    private void MostrarFormulario()
+    {
+        mensaje = null;
+        nuevoPerfil = new ClinicaBlazor.Models.Perfil();
+        mostrarFormulario = true;
+    }
+
+    private void CancelarEdicion()
+    {
+        mensaje = null;
+        nuevoPerfil = new ClinicaBlazor.Models.Perfil();
+        mostrarFormulario = false;
     }
 
     private void EditarPerfil(ClinicaBlazor.Models.Perfil perfil)
     {
         mensaje = null;
         mostrarDetalle = false;
-        perfilDetalle = null;
 
         nuevoPerfil = new ClinicaBlazor.Models.Perfil
         {
@@ -276,12 +312,8 @@ else
             Nombre = perfil.Nombre,
             Administrador = perfil.Administrador
         };
-    }
 
-    private void CancelarEdicion()
-    {
-        mensaje = null;
-        nuevoPerfil = new ClinicaBlazor.Models.Perfil();
+        mostrarFormulario = true;
     }
 
     private async Task EliminarPerfil(int id)
@@ -295,16 +327,8 @@ else
         }
 
         await PerfilService.EliminarAsync(id);
+
         mensaje = "Perfil eliminado correctamente.";
-
-        if (nuevoPerfil.Id == id)
-            nuevoPerfil = new ClinicaBlazor.Models.Perfil();
-
-        if (perfilDetalle?.Id == id)
-        {
-            perfilDetalle = null;
-            mostrarDetalle = false;
-        }
 
         await CargarPerfiles();
         ReiniciarPaginacionSiHaceFalta();
@@ -320,13 +344,7 @@ else
             return;
         }
 
-        perfilDetalle = new ClinicaBlazor.Models.Perfil
-        {
-            Id = perfil.Id,
-            Nombre = perfil.Nombre,
-            Administrador = perfil.Administrador
-        };
-
+        perfilDetalle = perfil;
         mostrarDetalle = true;
     }
 
