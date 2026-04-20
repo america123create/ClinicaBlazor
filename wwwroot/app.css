@@ -1121,3 +1121,20 @@ input:checked + .slider {
     .table-pink tbody tr:nth-child(even) {
         background: #fffafd;
     }
+
+.module-table th,
+.module-table td {
+    padding: 14px 18px;
+    white-space: nowrap;
+}
+
+.module-table th {
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    color: #a64d79;
+}
+
+.module-table {
+    border-collapse: separate;
+    border-spacing: 0 8px;
+}

@@ -181,12 +181,35 @@ else
         permisosFiltrados.Count == 0 ? 1 :
         (int)Math.Ceiling((double)permisosFiltrados.Count / filasPorPagina);
 
-    private void OnPerfilChange(ChangeEventArgs e)
+    private async Task OnPerfilChange(ChangeEventArgs e)
     {
         if (int.TryParse(e.Value?.ToString(), out int id))
         {
             perfilSeleccionadoId = id;
             paginaActual = 1;
+
+            var existentes = await PermisoPerfilService.ObtenerPorPerfilIdAsync(id);
+
+            if (!existentes.Any())
+            {
+                var modulos = await ModuloService.ObtenerTodosAsync();
+
+                foreach (var m in modulos)
+                {
+                    await PermisoPerfilService.GuardarAsync(new PermisoPerfil
+                    {
+                        PerfilId = id,
+                        ModuloId = m.Id,
+                        Agregar = false,
+                        Editar = false,
+                        Consultar = false,
+                        Eliminar = false,
+                        Detalle = false
+                    });
+                }
+
+                permisos = await PermisoPerfilService.ObtenerTodosAsync();
+            }
         }
     }
 
