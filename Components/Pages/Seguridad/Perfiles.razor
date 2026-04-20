@@ -40,40 +40,42 @@ else
     <!-- FORMULARIO (SOLO SE MUESTRA SI ESTA ACTIVO) -->
     @if (mostrarFormulario)
     {
-        <section class="form-card">
-            <EditForm Model="nuevoPerfil" OnValidSubmit="GuardarPerfil">
-                <DataAnnotationsValidator />
-                <ValidationSummary />
+        <div class="modal-backdrop" @onclick="CerrarFormulario">
+            <div class="modal-container" @onclick:stopPropagation="true">
 
-                <div class="form-grid perfiles-grid">
-                    <div class="form-group">
+                <div class="modal-header">
+                    <h3>@(nuevoPerfil.Id == 0 ? "Nuevo Perfil" : "Editar Perfil")</h3>
+                    <button class="close-btn" @onclick="CerrarFormulario">✖</button>
+                </div>
+
+                <EditForm Model="nuevoPerfil" OnValidSubmit="GuardarPerfil">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    <div class="modal-body">
                         <label>Nombre del perfil</label>
                         <InputText @bind-Value="nuevoPerfil.Nombre" class="form-control" />
-                    </div>
 
-                    <div class="form-group checkbox-group">
-                        <label>Configuración</label>
-                        <label class="checkbox-inline">
+                        <label style="margin-top:10px;">Configuración</label>
+                        <label>
                             <InputCheckbox @bind-Value="nuevoPerfil.Administrador" />
                             Es administrador
                         </label>
                     </div>
 
-                    <div class="form-actions full-width">
-                        @if ((nuevoPerfil.Id == 0 && puedeAgregar) || (nuevoPerfil.Id != 0 && puedeEditar))
-                        {
-                            <button type="submit" class="btn btn-primary module-add-btn">
-                                @(nuevoPerfil.Id == 0 ? "Guardar perfil" : "Actualizar perfil")
-                            </button>
-                        }
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">
+                            Guardar
+                        </button>
 
-                        <button type="button" class="btn btn-secondary" @onclick="CancelarEdicion">
+                        <button type="button" class="btn btn-secondary" @onclick="CerrarFormulario">
                             Cancelar
                         </button>
                     </div>
-                </div>
-            </EditForm>
-        </section>
+                </EditForm>
+
+            </div>
+        </div>
     }
 
     @if (!string.IsNullOrEmpty(mensaje))
@@ -370,5 +372,11 @@ else
     {
         if (paginaActual > TotalPaginas)
             paginaActual = TotalPaginas;
+    }
+
+    private void CerrarFormulario()
+    {
+        nuevoPerfil = new ClinicaBlazor.Models.Perfil();
+        mostrarFormulario = false;
     }
 }
